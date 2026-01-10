@@ -295,5 +295,68 @@ RSpec.describe Grafantastic::AST::Visitor do
         expect(visitor.metric_calls.first[:defining_class]).to eq("PaymentProcessor")
       end
     end
+
+    context "with dynamic metric names" do
+      it "detects dynamic metric calls with variable names" do
+        source = <<~RUBY
+          class RecordProcessor
+            def process(entity)
+              Prometheus.counter(entity.id).increment
+            end
+          end
+        RUBY
+        parse_and_visit(source)
+
+        expect(visitor.metric_calls).to be_empty
+        expect(visitor.dynamic_metric_calls.size).to eq(1)
+        expect(visitor.dynamic_metric_calls.first[:metric_type]).to eq(:counter)
+        expect(visitor.dynamic_metric_calls.first[:receiver]).to eq("Prometheus")
+        expect(visitor.dynamic_metric_calls.first[:defining_class]).to eq("RecordProcessor")
+      end
+
+      it "detects dynamic StatsD calls" do
+        source = <<~RUBY
+          class Foo
+            def bar(metric_name)
+              StatsD.increment(metric_name)
+            end
+          end
+        RUBY
+        parse_and_visit(source)
+
+        expect(visitor.metric_calls).to be_empty
+        expect(visitor.dynamic_metric_calls.size).to eq(1)
+        expect(visitor.dynamic_metric_calls.first[:receiver]).to eq("StatsD")
+      end
+
+      it "does not double-count chained dynamic calls" do
+        source = <<~RUBY
+          class Foo
+            def bar
+              Prometheus.counter(some_method).increment
+            end
+          end
+        RUBY
+        parse_and_visit(source)
+
+        expect(visitor.dynamic_metric_calls.size).to eq(1)
+      end
+
+      it "separates static and dynamic metric calls" do
+        source = <<~RUBY
+          class Foo
+            def bar
+              Prometheus.counter(:static_metric).increment
+              Prometheus.counter(dynamic_name).increment
+            end
+          end
+        RUBY
+        parse_and_visit(source)
+
+        expect(visitor.metric_calls.size).to eq(1)
+        expect(visitor.metric_calls.first[:name]).to eq("static_metric")
+        expect(visitor.dynamic_metric_calls.size).to eq(1)
+      end
+    end
   end
 end

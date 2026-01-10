@@ -4,7 +4,7 @@ module Grafantastic
   module AST
     class Visitor
       attr_reader :file_path, :inheritance_depth, :class_definitions,
-                  :log_calls, :metric_calls, :current_class
+                  :log_calls, :metric_calls, :dynamic_metric_calls, :current_class
 
       # Logger method patterns
       LOG_RECEIVERS = %i[logger Rails].freeze
@@ -23,6 +23,7 @@ module Grafantastic
         @class_definitions = []
         @log_calls = []
         @metric_calls = []
+        @dynamic_metric_calls = []
         @current_class = nil
         @class_stack = []
       end
@@ -112,21 +113,28 @@ module Grafantastic
         false
       end
 
+      # Methods that create metric objects (not action methods)
+      METRIC_FACTORY_METHODS = %i[counter gauge histogram summary].freeze
+      # Methods that perform metric actions
+      METRIC_ACTION_METHODS = %i[increment incr decrement decr set observe time timing].freeze
+
       def metric_call?(receiver, method_name, args)
         return false unless receiver
 
-        # Direct calls: StatsD.increment("metric")
+        # Direct calls with action method: StatsD.increment("metric")
+        # Only match if method_name is an action, not a factory
         if receiver.type == :const
           const_name = extract_const_name(receiver)&.to_sym
-          return METRIC_RECEIVERS.include?(const_name)
+          return METRIC_RECEIVERS.include?(const_name) && !METRIC_FACTORY_METHODS.include?(method_name)
         end
 
         # Chained calls: Prometheus.counter(:name).increment
+        # Match when receiver is a send (factory call) on a metric receiver
         if receiver.type == :send
           recv_recv, recv_method, *recv_args = receiver.children
           if recv_recv&.type == :const
             const_name = extract_const_name(recv_recv)&.to_sym
-            return METRIC_RECEIVERS.include?(const_name)
+            return METRIC_RECEIVERS.include?(const_name) && METRIC_FACTORY_METHODS.include?(recv_method)
           end
         end
 
@@ -146,14 +154,22 @@ module Grafantastic
 
       def record_metric_call(node, receiver, method_name, args)
         metric_info = extract_metric_info(receiver, method_name, args)
-        return unless metric_info
 
-        @metric_calls << {
-          name: metric_info[:name],
-          metric_type: metric_info[:type],
-          defining_class: @current_class || "(top-level)",
-          line: node.loc&.line
-        }
+        if metric_info && metric_info[:name]
+          @metric_calls << {
+            name: metric_info[:name],
+            metric_type: metric_info[:type],
+            defining_class: @current_class || "(top-level)",
+            line: node.loc&.line
+          }
+        elsif metric_info && metric_info[:dynamic]
+          @dynamic_metric_calls << {
+            metric_type: metric_info[:type],
+            defining_class: @current_class || "(top-level)",
+            line: node.loc&.line,
+            receiver: metric_info[:receiver]
+          }
+        end
       end
 
       def extract_log_event_name(args)
@@ -197,14 +213,28 @@ module Grafantastic
           recv_recv, recv_method, *recv_args = receiver.children
           metric_name = extract_metric_name(recv_args)
           metric_type = infer_metric_type(recv_method)
-          return { name: metric_name, type: metric_type } if metric_name
+
+          if metric_name
+            return { name: metric_name, type: metric_type }
+          elsif recv_recv&.type == :const
+            # Dynamic metric name detected
+            receiver_name = extract_const_name(recv_recv)
+            return { dynamic: true, type: metric_type, receiver: receiver_name }
+          end
         end
 
         # Handle direct calls: StatsD.increment("name")
         if receiver.type == :const
           metric_name = extract_metric_name(args)
           metric_type = infer_metric_type(method_name)
-          return { name: metric_name, type: metric_type } if metric_name
+
+          if metric_name
+            return { name: metric_name, type: metric_type }
+          else
+            # Dynamic metric name detected
+            receiver_name = extract_const_name(receiver)
+            return { dynamic: true, type: metric_type, receiver: receiver_name }
+          end
         end
 
         nil

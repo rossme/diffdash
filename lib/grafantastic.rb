@@ -80,6 +80,9 @@ module Grafantastic
       all_signals = extract_signals(filtered_files)
       log_verbose("Total signals extracted: #{all_signals.size}")
 
+      # Warn about dynamic metrics that couldn't be processed
+      warn_dynamic_metrics
+
       # Validate against guard rails
       validator = Validation::Limits.new(@config)
       validator.validate!(all_signals)
@@ -245,6 +248,7 @@ module Grafantastic
 
     def extract_signals(files)
       signals = []
+      @dynamic_metrics = []
       inheritance_resolver = AST::InheritanceResolver.new
 
       files.each do |file_path|
@@ -260,6 +264,7 @@ module Grafantastic
 
         signals.concat(Signals::LogExtractor.extract(visitor))
         signals.concat(Signals::MetricExtractor.extract(visitor))
+        collect_dynamic_metrics(visitor, file_path)
 
         # Resolve parent classes and extract their signals (depth = 1)
         visitor.class_definitions.each do |class_def|
@@ -275,10 +280,41 @@ module Grafantastic
 
           signals.concat(Signals::LogExtractor.extract(parent_visitor))
           signals.concat(Signals::MetricExtractor.extract(parent_visitor))
+          collect_dynamic_metrics(parent_visitor, parent_file)
         end
       end
 
       signals.uniq { |s| [s.type, s.name, s.source_file, s.defining_class] }
+    end
+
+    def collect_dynamic_metrics(visitor, file_path)
+      visitor.dynamic_metric_calls.each do |call|
+        @dynamic_metrics << {
+          file: file_path,
+          line: call[:line],
+          type: call[:metric_type],
+          class: call[:defining_class],
+          receiver: call[:receiver]
+        }
+      end
+    end
+
+    def warn_dynamic_metrics
+      return if @dynamic_metrics.nil? || @dynamic_metrics.empty?
+
+      warn ""
+      warn "[grafantastic] ⚠️  WARNING: #{@dynamic_metrics.size} dynamic metric name(s) detected"
+      warn "[grafantastic] These metrics use runtime values and cannot be added to the dashboard:"
+      warn ""
+
+      @dynamic_metrics.each do |m|
+        warn "  • #{m[:file]}:#{m[:line]} - #{m[:receiver]}.#{m[:type]} in #{m[:class]}"
+      end
+
+      warn ""
+      warn "[grafantastic] Tip: Use static metric names with labels instead:"
+      warn "  Prometheus.counter(:my_metric).increment(labels: { entity_id: id })"
+      warn ""
     end
 
     def sanitize_dashboard_title(branch_name)
