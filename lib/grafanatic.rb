@@ -2,7 +2,12 @@
 
 require "json"
 require "digest"
-require "dotenv/load"
+
+begin
+  require "dotenv/load"
+rescue LoadError
+  # dotenv is optional
+end
 
 require_relative "grafanatic/version"
 require_relative "grafanatic/config"
@@ -43,6 +48,11 @@ module Grafanatic
         return 0
       end
 
+      # Validate Grafana connection upfront (unless dry-run)
+      unless @dry_run
+        validate_grafana_connection!
+      end
+
       git_context = GitContext.new
       changed_files = git_context.changed_files
       branch_name = git_context.branch_name
@@ -75,11 +85,10 @@ module Grafanatic
       dashboard_json = builder.build
 
       # Output or upload
-      if @dry_run || !grafana_configured?
+      if @dry_run
         puts JSON.pretty_generate(dashboard_json)
       else
-        client = GrafanaClient.new
-        result = client.upload(dashboard_json)
+        result = @grafana_client.upload(dashboard_json)
         warn "Dashboard uploaded: #{result[:url]}" if result[:url]
         puts JSON.pretty_generate(dashboard_json)
       end
@@ -91,6 +100,9 @@ module Grafanatic
     rescue GitContextError => e
       warn "ERROR: #{e.message}"
       1
+    rescue GrafanaClient::ConnectionError => e
+      warn "ERROR: #{e.message}"
+      1
     rescue StandardError => e
       warn "ERROR: #{e.message}"
       warn e.backtrace.first(5).join("\n") if @verbose
@@ -98,6 +110,16 @@ module Grafanatic
     end
 
     private
+
+    def validate_grafana_connection!
+      log_verbose("Validating Grafana connection...")
+
+      client = GrafanaClient.new
+      client.health_check!
+
+      log_verbose("Connected to Grafana at #{client.url}")
+      @grafana_client = client
+    end
 
     def extract_signals(files)
       signals = []
@@ -147,10 +169,6 @@ module Grafanatic
       sanitized[0, 40]
     end
 
-    def grafana_configured?
-      ENV["GRAFANA_URL"] && ENV["GRAFANA_TOKEN"]
-    end
-
     def log_verbose(message)
       warn "[grafanatic] #{message}" if @verbose
     end
@@ -162,15 +180,18 @@ module Grafanatic
         Analyzes Ruby files changed in the current PR and generates a Grafana dashboard.
 
         Options:
-          --dry-run    Generate JSON only, do not upload to Grafana
+          --dry-run    Generate JSON only, skip Grafana connection (no env vars required)
           --verbose    Print detailed progress information
           --help       Show this help message
 
         Environment Variables:
-          GRAFANA_URL          Grafana instance URL (required for upload)
-          GRAFANA_TOKEN        Grafana API token (required for upload)
+          GRAFANA_URL          Grafana instance URL (required unless --dry-run)
+          GRAFANA_TOKEN        Grafana API token (required unless --dry-run)
           GRAFANA_FOLDER_ID    Target folder ID (optional)
           GRAFANATIC_DRY_RUN   Set to 'true' to force dry-run mode
+
+        The CLI validates Grafana connectivity at startup before processing files.
+        Use --dry-run to generate dashboard JSON without a Grafana connection.
 
         Output:
           Prints valid Grafana dashboard JSON to STDOUT.

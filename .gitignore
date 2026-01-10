@@ -1,0 +1,28 @@
+# Gem artifacts
+*.gem
+pkg/
+
+# Bundle
+.bundle/
+vendor/bundle/
+
+# RSpec
+spec/examples.txt
+coverage/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+tmp/
+log/
+
+# Environment
+.env
+.env.local

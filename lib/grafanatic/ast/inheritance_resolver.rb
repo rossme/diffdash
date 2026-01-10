@@ -8,7 +8,7 @@ module Grafanatic
       end
 
       def resolve_parent(parent_class_name, current_file)
-        return nil if parent_class_name.nil?
+        return unless parent_class_name
         return @resolved_cache[parent_class_name] if @resolved_cache.key?(parent_class_name)
 
         # Best-effort resolution strategies

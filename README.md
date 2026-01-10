@@ -111,6 +111,46 @@ The gem outputs valid Grafana dashboard JSON to STDOUT. Errors and progress info
 
 If no observability signals are found, a dashboard with a single text panel is generated.
 
+## GitHub Actions Integration
+
+Grafanatic works great as a GitHub Action that automatically creates dashboards for PRs.
+
+### Setup
+
+1. **Add secrets to your repository:**
+   - `GRAFANA_URL` - Your Grafana instance URL (e.g., `https://myorg.grafana.net`)
+   - `GRAFANA_TOKEN` - Service Account token with Editor role
+   - `GRAFANA_FOLDER_ID` (optional) - Folder ID for dashboards
+
+2. **Copy the workflow file:**
+   ```bash
+   cp .github/workflows/pr-dashboard.yml YOUR_REPO/.github/workflows/
+   ```
+
+3. **That's it!** When a PR is opened or updated with Ruby file changes:
+   - Grafanatic analyzes the changed files
+   - Creates/updates a dashboard in Grafana
+   - Posts a comment on the PR with the dashboard link
+
+### What it looks like
+
+When a developer opens a PR, they'll see a comment like:
+
+> ## 📊 Observability Dashboard
+>
+> A Grafana dashboard has been generated for the observability signals in this PR.
+>
+> **[View Dashboard](https://grafana.example.com/d/abc123/feature-branch)**
+
+### Workflow triggers
+
+The action runs on:
+- PR opened
+- PR synchronized (new commits pushed)
+- PR reopened
+
+It only triggers when Ruby files (excluding specs/tests) are changed.
+
 ## Architecture
 
 ```
@@ -123,6 +163,8 @@ Observability signals
 Validation (guard rails)
        ↓
 Grafana dashboard JSON
+       ↓
+(GitHub Action) PR comment with link
 ```
 
 ## Development

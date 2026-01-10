@@ -22,9 +22,10 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "parser", "~> 3.2"
   spec.add_dependency "ast", "~> 2.4"
-  spec.add_dependency "dotenv", "~> 2.8"
-  spec.add_dependency "faraday", "~> 2.7"
+  spec.add_dependency "dotenv", ">= 2.8"
+  spec.add_dependency "faraday", ">= 2.0"
 
   spec.add_development_dependency "rspec", "~> 3.12"
   spec.add_development_dependency "rubocop", "~> 1.50"
+  spec.add_development_dependency "webmock", "~> 3.18"
 end
