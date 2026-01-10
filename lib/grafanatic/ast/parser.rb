@@ -13,6 +13,7 @@ module Grafanatic
           parser.parse(buffer)
         rescue ::Parser::SyntaxError => e
           warn "[grafanatic] Syntax error in #{file_path}: #{e.message}"
+          nil
         end
       end
     end
