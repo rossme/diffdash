@@ -80,6 +80,14 @@ module Grafantastic
       all_signals = extract_signals(filtered_files)
       log_verbose("Total signals extracted: #{all_signals.size}")
 
+      # Exit early if no signals found
+      if all_signals.empty?
+        warn "[grafantastic] No observability signals found in changed files"
+        warn_dynamic_metrics_summary
+        warn "[grafantastic] Dashboard not created"
+        return 0
+      end
+
       # Print summary of what will be created
       print_signal_summary(all_signals)
 
@@ -309,11 +317,7 @@ module Grafantastic
       parts << "#{log_counts} log panel#{"s" unless log_counts == 1}" if log_counts > 0
       parts << "#{metric_counts} metric panel#{"s" unless metric_counts == 1}" if metric_counts > 0
 
-      if parts.empty?
-        warn "[grafantastic] Creating dashboard with default info panel (no signals found)"
-      else
-        warn "[grafantastic] Creating dashboard with #{parts.join(", ")}"
-      end
+      warn "[grafantastic] Creating dashboard with #{parts.join(", ")}"
 
       if dynamic_count > 0
         warn "[grafantastic] Please see: #{dynamic_count} dynamic metric#{"s" unless dynamic_count == 1} could not be added"
@@ -321,6 +325,14 @@ module Grafantastic
       end
 
       warn ""
+    end
+
+    def warn_dynamic_metrics_summary
+      dynamic_count = @dynamic_metrics&.size || 0
+      return if dynamic_count == 0
+
+      warn "[grafantastic] Note: #{dynamic_count} dynamic metric#{"s" unless dynamic_count == 1} detected but cannot be added to dashboard"
+      warn_dynamic_metrics_details if @verbose
     end
 
     def warn_dynamic_metrics_details

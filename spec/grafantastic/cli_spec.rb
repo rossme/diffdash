@@ -33,11 +33,14 @@ RSpec.describe Grafantastic::CLI do
     end
 
     context "with no changed files" do
-      it "generates empty dashboard" do
+      it "does not generate a dashboard" do
         output = capture_stdout { described_class.run(["--dry-run"]) }
-        json = JSON.parse(output)
 
-        expect(json["dashboard"]["panels"].first["type"]).to eq("text")
+        expect(output).to be_empty
+      end
+
+      it "outputs no signals message to stderr" do
+        expect { described_class.run(["--dry-run"]) }.to output(/No observability signals found/).to_stderr
       end
 
       it "returns 0 exit code" do
@@ -110,6 +113,16 @@ RSpec.describe Grafantastic::CLI do
     end
 
     context "dashboard title sanitization" do
+      let(:test_file) { create_temp_ruby_file }
+
+      before do
+        allow(git_context).to receive(:changed_files).and_return([test_file])
+      end
+
+      after do
+        File.delete(test_file) if File.exist?(test_file)
+      end
+
       it "removes special characters from branch name" do
         allow(git_context).to receive(:branch_name).and_return("feature/add-payments!")
 
