@@ -21,7 +21,7 @@ gem install grafantastic-*.gem
 
 ## Quick Start
 
-### 1. Create a `.env` file
+### 1. Add these to your application's `.env` (dotenv) file
 
 ```bash
 GRAFANA_URL=https://myorg.grafana.net
