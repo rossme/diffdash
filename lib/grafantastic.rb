@@ -308,23 +308,35 @@ module Grafantastic
     end
 
     def print_signal_summary(signals)
-      log_counts = signals.count { |s| s.type == :log }
-      metric_counts = signals.count { |s| %i[counter gauge histogram].include?(s.type) }
+      log_count = signals.count { |s| s.type == :log }
+      counter_count = signals.count { |s| s.type == :counter }
+      gauge_count = signals.count { |s| s.type == :gauge }
+      histogram_count = signals.count { |s| s.type == :histogram }
       dynamic_count = @dynamic_metrics&.size || 0
 
-      # Build panel count description
-      parts = []
-      parts << "#{log_counts} log panel#{"s" unless log_counts == 1}" if log_counts > 0
-      parts << "#{metric_counts} metric panel#{"s" unless metric_counts == 1}" if metric_counts > 0
+      # Build signal breakdown
+      signal_parts = []
+      signal_parts << pluralize(log_count, "log") if log_count > 0
+      signal_parts << pluralize(counter_count, "counter") if counter_count > 0
+      signal_parts << pluralize(gauge_count, "gauge") if gauge_count > 0
+      signal_parts << pluralize(histogram_count, "histogram") if histogram_count > 0
 
-      warn "[grafantastic] Creating dashboard with #{parts.join(", ")}"
+      # Build panel count
+      total_panels = [log_count, counter_count, gauge_count, histogram_count].count { |c| c > 0 }
+
+      warn "[grafantastic] Found: #{signal_parts.join(", ")}"
+      warn "[grafantastic] Creating dashboard with #{pluralize(total_panels, "panel")}"
 
       if dynamic_count > 0
-        warn "[grafantastic] Please see: #{dynamic_count} dynamic metric#{"s" unless dynamic_count == 1} could not be added"
+        warn "[grafantastic] Please see: #{pluralize(dynamic_count, "dynamic metric")} could not be added"
         warn_dynamic_metrics_details if @verbose
       end
 
       warn ""
+    end
+
+    def pluralize(count, word)
+      count == 1 ? "#{count} #{word}" : "#{count} #{word}s"
     end
 
     def warn_dynamic_metrics_summary
