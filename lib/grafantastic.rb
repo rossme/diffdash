@@ -11,7 +11,6 @@ end
 
 require_relative "grafantastic/version"
 require_relative "grafantastic/config"
-require_relative "grafantastic/configuration"
 require_relative "grafantastic/git_context"
 require_relative "grafantastic/file_filter"
 require_relative "grafantastic/signals/signal"
@@ -38,7 +37,6 @@ module Grafantastic
     def initialize(args)
       @args = args
       @config = Config.new
-      @configuration = Configuration.new
       @dry_run = ENV["GRAFANTASTIC_DRY_RUN"] == "true" || args.include?("--dry-run")
       @help = args.include?("--help") || args.include?("-h")
       @verbose = args.include?("--verbose") || args.include?("-v")
@@ -53,8 +51,8 @@ module Grafantastic
 
       # Handle subcommands
       case @subcommand
-      when "config"
-        return execute_config
+      when "folders"
+        return list_grafana_folders
       end
 
       # Validate Grafana connection upfront (unless dry-run)
@@ -132,92 +130,12 @@ module Grafantastic
     private
 
     def extract_subcommand(args)
-      subcommands = %w[config]
+      subcommands = %w[folders]
       args.find { |arg| subcommands.include?(arg) }
     end
 
-    def execute_config
-      config_args = @args.dup
-      config_args.delete("config")
-
-      if @help || config_args.empty?
-        print_config_help
-        return 0
-      end
-
-      action = config_args.shift
-
-      case action
-      when "set"
-        key, value = config_args.shift(2)
-        global = config_args.include?("--global")
-
-        unless key && value
-          warn "ERROR: Usage: grafantastic config set <key> <value> [--global]"
-          return 1
-        end
-
-        @configuration.save(key, value, global: global)
-        scope = global ? "global" : "local"
-        warn "Set #{key} in #{scope} config"
-        0
-
-      when "get"
-        key = config_args.shift
-        unless key
-          warn "ERROR: Usage: grafantastic config get <key>"
-          return 1
-        end
-
-        value = @configuration.send(key) rescue nil
-        if value
-          puts key == "grafana_token" ? "[REDACTED]" : value
-        else
-          warn "#{key} is not set"
-        end
-        0
-
-      when "list"
-        puts YAML.dump(@configuration.show)
-        0
-
-      when "delete"
-        key = config_args.shift
-        global = config_args.include?("--global")
-
-        unless key
-          warn "ERROR: Usage: grafantastic config delete <key> [--global]"
-          return 1
-        end
-
-        @configuration.delete(key, global: global)
-        scope = global ? "global" : "local"
-        warn "Deleted #{key} from #{scope} config"
-        0
-
-      when "folders"
-        list_grafana_folders
-
-      else
-        warn "ERROR: Unknown config action: #{action}"
-        print_config_help
-        1
-      end
-    rescue ArgumentError => e
-      warn "ERROR: #{e.message}"
-      1
-    end
-
     def list_grafana_folders
-      unless @configuration.configured?
-        warn "ERROR: Grafana not configured. Run: grafantastic config set grafana_url <url>"
-        return 1
-      end
-
-      client = GrafanaClient.new(
-        url: @configuration.grafana_url,
-        token: @configuration.grafana_token
-      )
+      client = GrafanaClient.new
       folders = client.list_folders
 
       if folders.empty?
@@ -229,10 +147,13 @@ module Grafantastic
           puts "  ID: #{folder['id'].to_s.ljust(6)} Title: #{folder['title']}"
         end
         puts ""
-        puts "Use: grafantastic config set grafana_folder_id <ID>"
+        puts "Set GRAFANA_FOLDER_ID in your .env file to use a specific folder"
       end
       0
     rescue GrafanaClient::ConnectionError => e
+      warn "ERROR: #{e.message}"
+      1
+    rescue Error => e
       warn "ERROR: #{e.message}"
       1
     end
@@ -240,14 +161,7 @@ module Grafantastic
     def validate_grafana_connection!
       log_verbose("Validating Grafana connection...")
 
-      unless @configuration.configured?
-        raise Error, "Grafana not configured. Run: grafantastic config set grafana_url <url> --global"
-      end
-
-      client = GrafanaClient.new(
-        url: @configuration.grafana_url,
-        token: @configuration.grafana_token
-      )
+      client = GrafanaClient.new
       client.health_check!
 
       log_verbose("Connected to Grafana at #{client.url}")
@@ -383,7 +297,7 @@ module Grafantastic
         Analyzes Ruby files changed in the current PR and generates a Grafana dashboard.
 
         Commands:
-          config       Configure Grafana connection settings
+          folders      List available Grafana folders
           (none)       Run analysis and generate/upload dashboard
 
         Options:
@@ -391,53 +305,20 @@ module Grafantastic
           --verbose    Print detailed progress information
           --help       Show this help message
 
-        Environment Variables (override config file):
-          GRAFANA_URL          Grafana instance URL
-          GRAFANA_TOKEN        Grafana API token
-          GRAFANA_FOLDER_ID    Target folder ID
+        Environment Variables (set in .env file):
+          GRAFANA_URL          Grafana instance URL (required)
+          GRAFANA_TOKEN        Grafana API token (required)
+          GRAFANA_FOLDER_ID    Target folder ID (optional)
           GRAFANTASTIC_DRY_RUN Set to 'true' to force dry-run mode
-
-        Configuration:
-          Settings are loaded from ~/.grafantastic.yml (global) and
-          .grafantastic.yml (local, in current directory).
-
-          Run 'grafantastic config --help' for configuration commands.
 
         Output:
           Prints valid Grafana dashboard JSON to STDOUT.
           Errors and progress info go to STDERR.
-      HELP
-    end
 
-    def print_config_help
-      puts <<~HELP
-        Usage: grafantastic config <action> [options]
-
-        Configure Grafana connection settings.
-
-        Actions:
-          set <key> <value>    Set a config value
-          get <key>            Get a config value
-          list                 Show all config values
-          delete <key>         Delete a config value
-          folders              List available Grafana folders
-
-        Options:
-          --global             Apply to ~/.grafantastic.yml (default: local)
-          --help               Show this help message
-
-        Available Keys:
-          grafana_url          Grafana instance URL (e.g., https://myorg.grafana.net)
-          grafana_token        Grafana API token (Service Account token)
-          grafana_folder_id    Target folder ID for dashboards
-          grafana_folder_name  Target folder name (for display)
-
-        Examples:
-          grafantastic config set grafana_url https://myorg.grafana.net --global
-          grafantastic config set grafana_token glsa_xxx --global
-          grafantastic config folders
-          grafantastic config set grafana_folder_id 42
-          grafantastic config list
+        Example .env file:
+          GRAFANA_URL=https://myorg.grafana.net
+          GRAFANA_TOKEN=glsa_xxxxxxxxxxxx
+          GRAFANA_FOLDER_ID=42
       HELP
     end
   end

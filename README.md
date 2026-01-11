@@ -21,21 +21,32 @@ gem install grafantastic-0.1.0.gem
 
 ## Quick Start
 
-### 1. Configure Grafana Connection
+### 1. Create a `.env` file
 
 ```bash
-# Set your Grafana credentials (stored in ~/.grafantastic.yml)
-grafantastic config set grafana_url https://myorg.grafana.net --global
-grafantastic config set grafana_token glsa_xxxxxxxxxxxx --global
-
-# List available folders
-grafantastic config folders
-
-# Set target folder for dashboards
-grafantastic config set grafana_folder_id 42
+GRAFANA_URL=https://myorg.grafana.net
+GRAFANA_TOKEN=glsa_xxxxxxxxxxxx
+GRAFANA_FOLDER_ID=42  # optional
 ```
 
-### 2. Generate Dashboard
+### 2. Find your folder ID (optional)
+
+```bash
+grafantastic folders
+```
+
+Output:
+```
+Available Grafana folders:
+
+  ID: 1      Title: General
+  ID: 42     Title: PR Dashboards
+  ID: 103    Title: Production
+
+Set GRAFANA_FOLDER_ID in your .env file to use a specific folder
+```
+
+### 3. Generate Dashboard
 
 ```bash
 # From your repo with changed files
@@ -45,59 +56,35 @@ grafantastic
 grafantastic --dry-run
 ```
 
-## CLI Commands
-
-### Main Command
+## CLI Usage
 
 ```bash
-grafantastic [options]
+grafantastic [command] [options]
 ```
+
+**Commands:**
+- `folders` - List available Grafana folders
+- *(none)* - Run analysis and generate/upload dashboard
 
 **Options:**
 - `--dry-run` - Generate JSON only, don't upload to Grafana
 - `--verbose` - Show detailed progress and dynamic metric warnings
 - `--help` - Show help
 
-### Config Command
-
-```bash
-grafantastic config <action> [options]
-```
-
-**Actions:**
-- `set <key> <value>` - Set a config value
-- `get <key>` - Get a config value
-- `list` - Show all config values
-- `delete <key>` - Delete a config value
-- `folders` - List available Grafana folders
-
-**Options:**
-- `--global` - Apply to `~/.grafantastic.yml` (default: local `.grafantastic.yml`)
-
-**Available Keys:**
-- `grafana_url` - Grafana instance URL
-- `grafana_token` - Grafana API token
-- `grafana_folder_id` - Target folder ID for dashboards
-- `grafana_folder_name` - Target folder name (for display)
-
-### Configuration Precedence
-
-1. Environment variables (highest priority)
-2. Local `.grafantastic.yml` (in current directory)
-3. Global `~/.grafantastic.yml` (lowest priority)
-
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `GRAFANA_URL` | Grafana instance URL |
-| `GRAFANA_TOKEN` | Grafana API token |
-| `GRAFANA_FOLDER_ID` | Target folder ID (optional) |
-| `GRAFANTASTIC_DRY_RUN` | Set to `true` to force dry-run mode |
+Set these in a `.env` file in your project root:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GRAFANA_URL` | Yes | Grafana instance URL (e.g., `https://myorg.grafana.net`) |
+| `GRAFANA_TOKEN` | Yes | Grafana API token (Service Account token with Editor role) |
+| `GRAFANA_FOLDER_ID` | No | Target folder ID for dashboards |
+| `GRAFANTASTIC_DRY_RUN` | No | Set to `true` to force dry-run mode |
 
 ## Output
 
-When signals are found, you'll see:
+When signals are found:
 
 ```
 [grafantastic] Found: 2 logs, 3 counters, 1 histogram
@@ -105,7 +92,7 @@ When signals are found, you'll see:
 [grafantastic] Please see: 1 dynamic metric could not be added
 ```
 
-**If no signals are found, no dashboard is created.** The gem exits cleanly with a message:
+**If no signals are found, no dashboard is created:**
 
 ```
 [grafantastic] No observability signals found in changed files
@@ -141,15 +128,7 @@ Prometheus.counter(entity.id).increment
 Prometheus.counter(:records_processed).increment(labels: { entity_id: id })
 ```
 
-When dynamic metrics are detected, you'll see a warning. Use `--verbose` for details:
-
-```
-[grafantastic] ⚠️  Dynamic metrics use runtime values and cannot be added to the dashboard:
-  • app/services/processor.rb:42 - Prometheus.counter in RecordProcessor
-
-[grafantastic] Tip: Use static metric names with labels instead:
-  Prometheus.counter(:my_metric).increment(labels: { entity_id: id })
-```
+Use `--verbose` to see details about dynamic metrics that were detected but couldn't be added.
 
 ## Guard Rails
 
@@ -191,8 +170,6 @@ Grandparents and deeper ancestors are not traversed.
 
 ## GitHub Actions Integration
 
-Grafantastic works great as a GitHub Action that automatically creates dashboards for PRs.
-
 ### Setup
 
 1. **Add secrets to your repository:**
@@ -230,34 +207,6 @@ jobs:
           GRAFANA_TOKEN: ${{ secrets.GRAFANA_TOKEN }}
           GRAFANA_FOLDER_ID: ${{ secrets.GRAFANA_FOLDER_ID }}
         run: grafantastic --verbose
-```
-
-### What Developers See
-
-When a PR is opened with Ruby file changes containing observability signals, a dashboard is created and the workflow logs show:
-
-```
-[grafantastic] Found: 2 logs, 1 counter
-[grafantastic] Creating dashboard with 2 panels
-Dashboard uploaded: https://myorg.grafana.net/d/feature-branch/feature-branch
-```
-
-## Architecture
-
-```
-Git context (changed files, branch name)
-              ↓
-     Ruby source files
-              ↓
-    AST analysis (parser gem)
-              ↓
-   Signal extraction (logs, metrics)
-              ↓
-    Validation (guard rails)
-              ↓
-   Dashboard JSON generation
-              ↓
-    Upload to Grafana API
 ```
 
 ## Development
