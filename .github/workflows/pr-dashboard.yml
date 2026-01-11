@@ -42,10 +42,8 @@ jobs:
           bundler-cache: true
 
       - name: Install grafantastic from GitHub
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git clone https://x-access-token:${GH_TOKEN}@github.com/rossme/grafantastic.git /tmp/grafantastic
+          git clone https://github.com/rossme/grafantastic.git /tmp/grafantastic
           cd /tmp/grafantastic
           gem build grafantastic.gemspec
           gem install grafantastic-*.gem
