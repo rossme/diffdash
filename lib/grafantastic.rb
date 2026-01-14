@@ -25,9 +25,6 @@ require_relative "grafantastic/formatters/dashboard_title"
 require_relative "grafantastic/signals/log_extractor"
 require_relative "grafantastic/signals/metric_extractor"
 require_relative "grafantastic/validation/limits"
-require_relative "grafantastic/dashboard/panel_templates"
-require_relative "grafantastic/dashboard/builder"
-require_relative "grafantastic/grafana_client"
 
 module Grafantastic
   class Error < StandardError; end

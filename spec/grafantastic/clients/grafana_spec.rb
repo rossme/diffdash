@@ -216,21 +216,4 @@ RSpec.describe Grafantastic::Clients::Grafana do
     end
   end
 
-  describe "backward compatibility" do
-    it "old GrafanaClient still works" do
-      # Ensure the deprecated wrapper still functions
-      legacy_client = Grafantastic::GrafanaClient.new
-      
-      stub_request(:get, "#{grafana_url}/api/health")
-        .to_return(status: 200, body: '{"database": "ok"}')
-      
-      expect(legacy_client.health_check!).to be true
-    end
-
-    it "old ConnectionError class still accessible" do
-      expect(Grafantastic::GrafanaClient::ConnectionError).to eq(
-        Grafantastic::Clients::Grafana::ConnectionError
-      )
-    end
-  end
 end

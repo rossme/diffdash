@@ -165,7 +165,7 @@ RSpec.describe Grafantastic::CLI do
         allow(ENV).to receive(:[]).with("GRAFANA_URL").and_return("https://grafana.example.com")
         allow(ENV).to receive(:[]).with("GRAFANA_TOKEN").and_return("token")
 
-        expect(Grafantastic::GrafanaClient).not_to receive(:new)
+        expect(Grafantastic::Clients::Grafana).not_to receive(:new)
 
         described_class.run(["--dry-run"])
       end
