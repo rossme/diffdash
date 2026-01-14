@@ -48,18 +48,18 @@ RSpec.describe Diffdash::Config do
   end
 
   describe "#dry_run?" do
-    it "returns true when GRAFANTASTIC_DRY_RUN is 'true'" do
-      allow(ENV).to receive(:[]).with("GRAFANTASTIC_DRY_RUN").and_return("true")
+    it "returns true when DIFFDASH_DRY_RUN is 'true'" do
+      allow(ENV).to receive(:[]).with("DIFFDASH_DRY_RUN").and_return("true")
       expect(config.dry_run?).to be true
     end
 
-    it "returns false when GRAFANTASTIC_DRY_RUN is not 'true'" do
-      allow(ENV).to receive(:[]).with("GRAFANTASTIC_DRY_RUN").and_return("false")
+    it "returns false when DIFFDASH_DRY_RUN is not 'true'" do
+      allow(ENV).to receive(:[]).with("DIFFDASH_DRY_RUN").and_return("false")
       expect(config.dry_run?).to be false
     end
 
-    it "returns false when GRAFANTASTIC_DRY_RUN is not set" do
-      allow(ENV).to receive(:[]).with("GRAFANTASTIC_DRY_RUN").and_return(nil)
+    it "returns false when DIFFDASH_DRY_RUN is not set" do
+      allow(ENV).to receive(:[]).with("DIFFDASH_DRY_RUN").and_return(nil)
       expect(config.dry_run?).to be false
     end
   end

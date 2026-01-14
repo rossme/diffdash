@@ -80,7 +80,7 @@ Set these in a `.env` file in your project root:
 | `GRAFANA_URL` | Yes | Grafana instance URL (e.g., `https://myorg.grafana.net`) |
 | `GRAFANA_TOKEN` | Yes | Grafana API token (Service Account token with Editor role) |
 | `GRAFANA_FOLDER_ID` | No | Target folder ID for dashboards |
-| `GRAFANTASTIC_DRY_RUN` | No | Set to `true` to force dry-run mode |
+| `DIFFDASH_DRY_RUN` | No | Set to `true` to force dry-run mode |
 
 ## Output
 

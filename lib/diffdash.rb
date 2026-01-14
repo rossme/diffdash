@@ -42,7 +42,7 @@ module Diffdash
     def initialize(args)
       @args = args
       @config = Config.new
-      @dry_run = ENV["GRAFANTASTIC_DRY_RUN"] == "true" || args.include?("--dry-run")
+      @dry_run = ENV["DIFFDASH_DRY_RUN"] == "true" || args.include?("--dry-run")
       @help = args.include?("--help") || args.include?("-h")
       @verbose = args.include?("--verbose") || args.include?("-v")
       @subcommand = extract_subcommand(args)
@@ -278,7 +278,7 @@ module Diffdash
           GRAFANA_URL          Grafana instance URL (required)
           GRAFANA_TOKEN        Grafana API token (required)
           GRAFANA_FOLDER_ID    Target folder ID (optional)
-          GRAFANTASTIC_DRY_RUN Set to 'true' to force dry-run mode
+          DIFFDASH_DRY_RUN Set to 'true' to force dry-run mode
 
         Output:
           Prints valid Grafana dashboard JSON to STDOUT.

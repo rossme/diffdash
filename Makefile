@@ -2,15 +2,15 @@
 
 # Generate dashboard JSON and print to stdout
 dashboard:
-	@bundle exec grafantastic
+	@bundle exec diffdash
 
 # Generate dashboard with verbose output
 dashboard-verbose:
-	@bundle exec grafantastic --verbose
+	@bundle exec diffdash --verbose
 
 # Dry run - generate JSON only, never upload
 dashboard-dry:
-	@bundle exec grafantastic --dry-run
+	@bundle exec diffdash --dry-run
 
 # Install dependencies
 install:
@@ -30,8 +30,8 @@ clean:
 
 # Build the gem
 build:
-	@gem build grafantastic.gemspec
+	@gem build diffdash.gemspec
 
 # Install the gem locally
 install-gem: build
-	@gem install grafantastic-*.gem
+	@gem install diffdash-*.gem

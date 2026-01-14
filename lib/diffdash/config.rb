@@ -30,7 +30,7 @@ module Diffdash
     end
 
     def dry_run?
-      ENV["GRAFANTASTIC_DRY_RUN"] == "true"
+      ENV["DIFFDASH_DRY_RUN"] == "true"
     end
   end
 end
