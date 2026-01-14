@@ -1,22 +1,22 @@
-# Grafantastic
+# Diffdash
 
 PR-scoped observability signal extractor and Grafana dashboard generator.
 
 ## Overview
 
-Grafantastic statically analyzes Ruby source code changed in a Pull Request and generates a Grafana dashboard JSON containing panels relevant to the observability signals found in that code.
+Diffdash statically analyzes Ruby source code changed in a Pull Request and generates a Grafana dashboard JSON containing panels relevant to the observability signals found in that code.
 
 ## Installation
 
 ```bash
-gem install grafantastic
+gem install diffdash
 ```
 
 Or from source:
 
 ```bash
-gem build grafantastic.gemspec
-gem install grafantastic-*.gem
+gem build diffdash.gemspec
+gem install diffdash-*.gem
 ```
 
 ## Quick Start
@@ -32,7 +32,7 @@ GRAFANA_FOLDER_ID=42  # optional
 ### 2. Find your folder ID (optional)
 
 ```bash
-grafantastic folders
+diffdash folders
 ```
 
 Output:
@@ -50,16 +50,16 @@ Set GRAFANA_FOLDER_ID in your .env file to use a specific folder
 
 ```bash
 # From your repo with changed files
-grafantastic
+diffdash
 
 # Or dry-run to see JSON without uploading
-grafantastic --dry-run
+diffdash --dry-run
 ```
 
 ## CLI Usage
 
 ```bash
-grafantastic [command] [options]
+diffdash [command] [options]
 ```
 
 **Commands:**
@@ -87,30 +87,30 @@ Set these in a `.env` file in your project root:
 When signals are found, JSON is output first, then a summary:
 
 ```
-[grafantastic] v0.4.0
+[diffdash] v0.4.0
 { ... dashboard JSON ... }
 
-[grafantastic] Dashboard created with 4 panels: 2 logs, 3 counters, 1 gauge, 1 histogram
-[grafantastic] Uploaded to: https://myorg.grafana.net/d/abc123/feature-branch
-[grafantastic] Note: 1 dynamic metric could not be added
+[diffdash] Dashboard created with 4 panels: 2 logs, 3 counters, 1 gauge, 1 histogram
+[diffdash] Uploaded to: https://myorg.grafana.net/d/abc123/feature-branch
+[diffdash] Note: 1 dynamic metric could not be added
 ```
 
 In dry-run mode:
 
 ```
-[grafantastic] v0.4.0
+[diffdash] v0.4.0
 { ... dashboard JSON ... }
 
-[grafantastic] Dashboard created with 4 panels: 2 logs, 3 counters, 1 gauge, 1 histogram
-[grafantastic] Mode: dry-run (not uploaded)
+[diffdash] Dashboard created with 4 panels: 2 logs, 3 counters, 1 gauge, 1 histogram
+[diffdash] Mode: dry-run (not uploaded)
 ```
 
 **If no signals are found, no dashboard is created:**
 
 ```
-[grafantastic] v0.4.0
-[grafantastic] No observability signals found in changed files
-[grafantastic] Dashboard not created
+[diffdash] v0.4.0
+[diffdash] No observability signals found in changed files
+[diffdash] Dashboard not created
 ```
 
 ## Observability Signals
@@ -243,15 +243,15 @@ jobs:
         with:
           ruby-version: '3.x'
 
-      - name: Install grafantastic
-        run: gem install grafantastic
+      - name: Install diffdash
+        run: gem install diffdash
 
       - name: Generate dashboard
         env:
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
           GRAFANA_TOKEN: ${{ secrets.GRAFANA_TOKEN }}
           GRAFANA_FOLDER_ID: ${{ secrets.GRAFANA_FOLDER_ID }}
-        run: grafantastic --verbose
+        run: diffdash --verbose
 ```
 
 ## Development
@@ -267,7 +267,7 @@ bundle exec rspec
 bundle exec rubocop
 
 # Build gem
-gem build grafantastic.gemspec
+gem build diffdash.gemspec
 ```
 
 ## License
