@@ -3,4 +3,4 @@
 
 require "diffdash"
 
-exit Diffdash::CLI.run(ARGV)
+exit Diffdash::CLI::Runner.run(ARGV)

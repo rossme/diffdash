@@ -282,6 +282,7 @@ RSpec.describe Diffdash::Renderers::Grafana do
         expect(variable_names).to include("datasource_loki")
         expect(variable_names).to include("service")
         expect(variable_names).to include("env")
+        expect(variable_names).to include("app")
       end
 
       it "includes deployment annotations" do

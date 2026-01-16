@@ -12,7 +12,7 @@ module Diffdash
     #   - Error handling for network/API failures
     # 
     # NOT responsible for:
-    #   - Dashboard structure/JSON generation (see Renderers::Grafana)
+    #   - Dashboard structure/JSON generation (see Outputs::Grafana)
     #   - Signal detection (see Detectors::*)
     #   - Business logic or validation
     class Grafana
