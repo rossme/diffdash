@@ -23,7 +23,6 @@ module Diffdash
         resolved
       end
 
-      # Alias for backwards compatibility
       alias resolve_parent resolve
 
       # Collect ancestors from a structure hash (class_definitions, included_modules, etc.)

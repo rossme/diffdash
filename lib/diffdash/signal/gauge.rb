@@ -15,7 +15,6 @@ module Diffdash
         confidence: :high,
         metadata: {}
       )
-        # Ensure metric_type is set for backward compatibility
         metadata_with_type = metadata.merge(metric_type: :gauge)
 
         super(

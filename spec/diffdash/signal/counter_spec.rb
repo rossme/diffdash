@@ -35,7 +35,7 @@ RSpec.describe Diffdash::Signal::Counter do
   end
 
   describe "#to_h" do
-    it "includes metric_type in metadata for backward compatibility" do
+    it "includes metric_type in metadata" do
       hash = counter_signal.to_h
       expect(hash[:type]).to eq(:metric)
       expect(hash[:metadata][:metric_type]).to eq(:counter)
