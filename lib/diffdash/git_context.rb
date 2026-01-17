@@ -13,11 +13,7 @@ module Diffdash
       branch = result.strip
 
       if branch.empty?
-        # Detached HEAD - try to get from CI env vars
-        branch = ENV["GITHUB_HEAD_REF"] ||
-                 ENV["CI_COMMIT_REF_NAME"] ||
-                 ENV["BRANCH_NAME"] ||
-                 "detached-head"
+        raise GitContextError, "Could not determine branch name. Ensure you are on a branch."
       end
 
       branch

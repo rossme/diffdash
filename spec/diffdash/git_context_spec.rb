@@ -17,14 +17,15 @@ RSpec.describe Diffdash::GitContext do
       end
     end
 
-    context "with CI environment variables" do
-      it "uses GITHUB_HEAD_REF when set" do
-        allow(ENV).to receive(:[]).and_call_original
-        allow(ENV).to receive(:[]).with("GITHUB_HEAD_REF").and_return("pr-123")
-
+    context "when branch cannot be determined" do
+      it "raises GitContextError" do
         context = described_class.new
-        # If git branch fails or returns empty, it should use the env var
-        expect(["main", "pr-123"]).to include(context.branch_name)
+        allow(context).to receive(:run_git).with("branch", "--show-current").and_return("")
+
+        expect { context.branch_name }.to raise_error(
+          Diffdash::GitContextError,
+          /Could not determine branch name/
+        )
       end
     end
   end
