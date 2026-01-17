@@ -2,6 +2,23 @@
 
 module Diffdash
   module AST
+    # Traverses a Ruby AST and extracts observability signals.
+    #
+    # Collects:
+    # - Log calls (logger.info, Rails.logger.warn, etc.)
+    # - Metric calls (StatsD.increment, Prometheus.counter, Hesiod, etc.)
+    # - Class/module definitions and their inheritance relationships
+    # - Module inclusions (include, prepend, extend)
+    #
+    # The visitor walks the AST recursively, recording relevant method calls
+    # and their metadata (class context, line number, log level, metric type).
+    #
+    # @example
+    #   ast = Parser.parse(source, file_path)
+    #   visitor = Visitor.new(file_path: file_path, inheritance_depth: 0)
+    #   visitor.process(ast)
+    #   visitor.log_calls      # => [{ level: "info", event_name: "...", ... }]
+    #   visitor.metric_calls   # => [{ name: "...", metric_type: :counter, ... }]
     class Visitor
       attr_reader :file_path, :inheritance_depth, :class_definitions,
                   :module_definitions, :log_calls, :metric_calls,

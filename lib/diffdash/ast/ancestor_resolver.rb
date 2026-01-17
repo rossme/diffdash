@@ -4,6 +4,16 @@ require "set"
 
 module Diffdash
   module AST
+    # Resolves parent classes and included modules to their file paths.
+    #
+    # Used to traverse the inheritance hierarchy and collect observability signals
+    # from ancestor files. Supports both class inheritance and module inclusion/prepending.
+    #
+    # Resolution strategies:
+    # 1. Convention-based: converts class name to file path (e.g., PaymentService -> payment_service.rb)
+    # 2. Grep-based: searches for class/module definitions in app/ and lib/
+    #
+    # Caches resolved paths to avoid repeated lookups.
     class AncestorResolver
       MAX_DEPTH = 5 # Prevent infinite loops
 
