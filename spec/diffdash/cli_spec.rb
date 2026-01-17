@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Diffdash::CLI do
+RSpec.describe Diffdash::CLI::Runner do
   let(:git_context) { instance_double(Diffdash::GitContext) }
 
   before do

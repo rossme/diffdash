@@ -38,11 +38,7 @@ require_relative "diffdash/outputs/grafana"
 require_relative "diffdash/outputs/kibana"
 require_relative "diffdash/outputs/json"
 
-# Backwards-compatible renderer wrapper
-require_relative "diffdash/renderers/grafana"
-
 # CLI
-require_relative "diffdash/cli"
 require_relative "diffdash/cli/runner"
 
 module Diffdash

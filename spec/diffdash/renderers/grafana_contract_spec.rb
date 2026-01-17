@@ -17,20 +17,26 @@ RSpec.describe "Grafana v1 dashboard contract" do
   end
 
   it "matches the golden dashboard fixture" do
-    signal = Diffdash::Signal::Log.new(
+    signal = Diffdash::Engine::SignalQuery.new(
+      type: :logs,
       name: "hello_from_grape_api",
+      time_range: { from: "now-1h", to: "now" },
       source_file: "/app/api/v1/base.rb",
       defining_class: "V1::Base",
-      inheritance_depth: 0,
       metadata: { level: "info", line: 42 }
     )
-    renderer = Diffdash::Renderers::Grafana.new(
-      signals: [signal],
+    bundle = Diffdash::Engine::SignalBundle.new(
+      logs: [signal],
+      metrics: [],
+      traces: [],
+      metadata: { time_range: { from: "now-1h", to: "now" } }
+    )
+    renderer = Diffdash::Outputs::Grafana.new(
       title: "contract-dashboard",
       folder_id: 123
     )
 
-    output = stringify_keys(renderer.render)
+    output = stringify_keys(renderer.render(bundle))
     fixture = JSON.parse(File.read(fixture_path))
 
     expect(output).to eq(fixture)
