@@ -322,6 +322,16 @@ messages, it uses the exact literal in the query:
 For **interpolated or dynamic strings**, Diffdash falls back to a sanitized
 identifier to keep queries stable.
 
+## Grafana Schema Validation
+
+Grafana’s Schema v2 is still experimental, so Diffdash currently validates
+against the **v1 dashboard JSON model** (the format used by the Grafana API).
+We enforce this via a golden‑file contract test to keep output stable.
+
+Reference:
+- Grafana v1 dashboard JSON model: https://grafana.com/docs/grafana/latest/visualizations/dashboards/build-dashboards/view-dashboard-json-model/#dashboard-json
+- Grafana Schema v2 (experimental): https://grafana.com/docs/grafana/latest/as-code/observability-as-code/schema-v2/
+
 ## License
 
 MIT
