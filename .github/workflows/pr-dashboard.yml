@@ -42,9 +42,6 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: true
 
-      - name: Run RSpec
-        run: bundle exec rspec
-
       - name: Install diffdash from GitHub
         run: |
           git clone https://github.com/rossme/diffdash.git /tmp/diffdash
