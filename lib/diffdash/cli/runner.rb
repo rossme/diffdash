@@ -5,7 +5,7 @@ module Diffdash
     # Thin CLI glue. Orchestrates engine + output adapters.
     class Runner
       VALID_OPTIONS = %w[--dry-run --verbose -v --help -h].freeze
-      VALID_SUBCOMMANDS = %w[folders].freeze
+      VALID_SUBCOMMANDS = %w[folders rspec].freeze
 
       def self.run(args)
         new(args).execute
@@ -42,6 +42,8 @@ module Diffdash
         case @subcommand
         when "folders"
           return list_grafana_folders
+        when "rspec"
+          return run_rspec
         end
 
         warn "[diffdash] v#{VERSION}"
@@ -103,6 +105,13 @@ module Diffdash
         @args.reject do |arg|
           VALID_OPTIONS.include?(arg) || VALID_SUBCOMMANDS.include?(arg)
         end
+      end
+
+      def rspec_args
+        idx = @args.index("rspec")
+        return [] unless idx
+
+        @args[(idx + 1)..] || []
       end
 
       def build_outputs(change_set)
@@ -200,6 +209,13 @@ module Diffdash
         1
       end
 
+      def run_rspec
+        cmd = ["bundle", "exec", "rspec", *rspec_args]
+        warn "[diffdash] Running: #{cmd.join(" ")}"
+        system(*cmd)
+        $?.success? ? 0 : 1
+      end
+
       def print_signal_summary(bundle, url: nil)
         log_count = bundle.logs.size
         counter_count = bundle.metrics.count { |s| s.metadata[:metric_type] == :counter }
@@ -275,6 +291,7 @@ module Diffdash
 
           Commands:
             folders      List available Grafana folders
+            rspec [args] Run the RSpec suite (passes args through)
             (none)       Run analysis and generate/upload dashboard
 
           Options:
