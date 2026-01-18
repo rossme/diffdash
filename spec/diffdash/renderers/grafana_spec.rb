@@ -336,9 +336,22 @@ RSpec.describe Diffdash::Outputs::Grafana do
         annotations = result[:dashboard][:annotations][:list]
 
         expect(annotations.size).to eq(2)
-        expect(annotations.first[:name]).to eq("Deployments")
-        expect(annotations.last[:name]).to eq("PR Deployments")
-        expect(annotations.last[:expr]).to eq("changes(deploy_timestamp{branch=\"feature/pr-123\"}[5m]) > 0")
+        base = annotations.first
+        pr = annotations.last
+
+        expect(base[:name]).to eq("Deployments")
+        expect(base[:datasource]).to eq(type: "prometheus", uid: "${datasource}")
+        expect(base[:enable]).to be true
+        expect(base[:expr]).to eq("changes(deploy_timestamp[5m]) > 0")
+        expect(base[:tagKeys]).to eq("app,env")
+        expect(base[:titleFormat]).to eq("Deploy")
+
+        expect(pr[:name]).to eq("PR Deployments")
+        expect(pr[:datasource]).to eq(type: "prometheus", uid: "${datasource}")
+        expect(pr[:enable]).to be true
+        expect(pr[:expr]).to eq("changes(deploy_timestamp{branch=\"feature/pr-123\"}[5m]) > 0")
+        expect(pr[:tagKeys]).to eq("app,env,branch")
+        expect(pr[:titleFormat]).to eq("PR Deploy")
       end
 
       it "sets schema version" do
