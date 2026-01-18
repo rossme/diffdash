@@ -4,7 +4,14 @@ RSpec.describe Diffdash::Outputs::Grafana do
   describe "#render" do
     context "with empty signals" do
       subject(:renderer) { described_class.new(title: "Empty Dashboard", folder_id: nil) }
-      let(:bundle) { Diffdash::Engine::SignalBundle.new(metadata: { time_range: { from: "now-1h", to: "now" } }) }
+      let(:bundle) do
+        Diffdash::Engine::SignalBundle.new(
+          metadata: {
+            time_range: { from: "now-1h", to: "now" },
+            change_set: { branch_name: "feature/pr-123" }
+          }
+        )
+      end
 
       it "returns valid Grafana JSON structure" do
         result = renderer.render(bundle)
@@ -296,7 +303,14 @@ RSpec.describe Diffdash::Outputs::Grafana do
 
     context "dashboard metadata" do
       subject(:renderer) { described_class.new(title: "Test Dashboard", folder_id: nil) }
-      let(:bundle) { Diffdash::Engine::SignalBundle.new(metadata: { time_range: { from: "now-1h", to: "now" } }) }
+      let(:bundle) do
+        Diffdash::Engine::SignalBundle.new(
+          metadata: {
+            time_range: { from: "now-1h", to: "now" },
+            change_set: { branch_name: "feature/pr-123" }
+          }
+        )
+      end
 
       it "includes Grafana tags" do
         result = renderer.render(bundle)
@@ -321,8 +335,23 @@ RSpec.describe Diffdash::Outputs::Grafana do
         result = renderer.render(bundle)
         annotations = result[:dashboard][:annotations][:list]
 
-        expect(annotations.size).to eq(1)
-        expect(annotations.first[:name]).to eq("Deployments")
+        expect(annotations.size).to eq(2)
+        base = annotations.first
+        pr = annotations.last
+
+        expect(base[:name]).to eq("Deployments")
+        expect(base[:datasource]).to eq(type: "prometheus", uid: "${datasource}")
+        expect(base[:enable]).to be true
+        expect(base[:expr]).to eq("changes(deploy_timestamp[5m]) > 0")
+        expect(base[:tagKeys]).to eq("app,env")
+        expect(base[:titleFormat]).to eq("Deploy")
+
+        expect(pr[:name]).to eq("PR Deployments")
+        expect(pr[:datasource]).to eq(type: "prometheus", uid: "${datasource}")
+        expect(pr[:enable]).to be true
+        expect(pr[:expr]).to eq("changes(deploy_timestamp{branch=\"feature/pr-123\"}[5m]) > 0")
+        expect(pr[:tagKeys]).to eq("app,env,branch")
+        expect(pr[:titleFormat]).to eq("PR Deploy")
       end
 
       it "sets schema version" do
