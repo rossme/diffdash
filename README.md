@@ -85,8 +85,6 @@ Set these in a `.env` file in your project root:
 | `DIFFDASH_DRY_RUN` | No | Set to `true` to force dry-run mode |
 | `DIFFDASH_PR_DEPLOY_ANNOTATION_EXPR` | No | PromQL expr for PR deployment annotation |
 
-Legacy `GRAFANA_*` env vars are still supported as fallbacks for now.
-
 ## Output
 
 When signals are found, JSON is output first, then a summary:
