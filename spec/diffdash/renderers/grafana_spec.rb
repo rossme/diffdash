@@ -303,7 +303,14 @@ RSpec.describe Diffdash::Outputs::Grafana do
 
     context "dashboard metadata" do
       subject(:renderer) { described_class.new(title: "Test Dashboard", folder_id: nil) }
-      let(:bundle) { Diffdash::Engine::SignalBundle.new(metadata: { time_range: { from: "now-1h", to: "now" } }) }
+      let(:bundle) do
+        Diffdash::Engine::SignalBundle.new(
+          metadata: {
+            time_range: { from: "now-1h", to: "now" },
+            change_set: { branch_name: "feature/pr-123" }
+          }
+        )
+      end
 
       it "includes Grafana tags" do
         result = renderer.render(bundle)
