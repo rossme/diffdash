@@ -28,14 +28,19 @@ module Diffdash
         @token = token || ENV["DIFFDASH_GRAFANA_TOKEN"] || ENV.fetch("GRAFANA_TOKEN") { raise Error, "DIFFDASH_GRAFANA_TOKEN not set" }
       end
 
-      # Validates connection to Grafana by hitting the health endpoint
-      # @return [true] if health check succeeds
-      # @raise [ConnectionError] if connection fails or returns non-200
+      # Validates connection and authentication to Grafana
+      # Uses /api/org endpoint which requires valid auth (unlike /api/health which is public)
+      # @return [true] if connection and auth succeed
+      # @raise [ConnectionError] if connection fails or auth is invalid
       def health_check!
-        response = connection.get("/api/health")
+        response = connection.get("/api/org")
 
         unless response.success?
-          raise ConnectionError, "Grafana health check failed (#{response.status}): #{response.body}"
+          if response.status == 401
+            raise ConnectionError, "Grafana authentication failed (401): Check your DIFFDASH_GRAFANA_TOKEN"
+          else
+            raise ConnectionError, "Grafana health check failed (#{response.status}): #{response.body}"
+          end
         end
 
         true
