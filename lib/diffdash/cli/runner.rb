@@ -78,7 +78,8 @@ module Diffdash
         end
 
         # Summaries
-        print_signal_summary(bundle, url: grafana_result&.dig(:url))
+        grafana_failed = errors.any? { |e| e[:adapter] == :grafana }
+        print_signal_summary(bundle, url: grafana_result&.dig(:url), grafana_failed: grafana_failed)
 
         warn_output_errors(errors) if errors.any?
 
@@ -216,7 +217,7 @@ module Diffdash
         $?.success? ? 0 : 1
       end
 
-      def print_signal_summary(bundle, url: nil)
+      def print_signal_summary(bundle, url: nil, grafana_failed: false)
         log_count = bundle.logs.size
         counter_count = bundle.metrics.count { |s| s.metadata[:metric_type] == :counter }
         gauge_count = bundle.metrics.count { |s| s.metadata[:metric_type] == :gauge }
@@ -240,8 +241,12 @@ module Diffdash
 
         if url
           warn "[diffdash] Uploaded to: #{url}"
-        else
+        elsif grafana_failed
+          warn "[diffdash] Upload failed (see errors below)"
+        elsif @dry_run
           warn "[diffdash] Mode: dry-run (not uploaded)"
+        else
+          warn "[diffdash] Dashboard JSON printed to stdout"
         end
 
         if dynamic_count > 0
