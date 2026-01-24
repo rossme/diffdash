@@ -101,9 +101,12 @@ module Diffdash
           type: "query",
           datasource: { type: "loki", uid: "${datasource_loki}" },
           query: "label_values({app!=\"\"}, app)",
-          refresh: 2,
+          refresh: 1,
           includeAll: false,
-          multi: false
+          multi: false,
+          current: {},
+          options: [],
+          sort: 1
         }
       end
 
