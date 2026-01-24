@@ -82,14 +82,24 @@ RSpec.describe Diffdash::Clients::Grafana do
     subject(:client) { described_class.new }
 
     it "returns true on success" do
-      stub_request(:get, "#{grafana_url}/api/health")
-        .to_return(status: 200, body: '{"database": "ok"}')
+      stub_request(:get, "#{grafana_url}/api/org")
+        .to_return(status: 200, body: '{"id": 1, "name": "Main Org."}')
       
       expect(client.health_check!).to be true
     end
 
+    it "raises ConnectionError on authentication failure" do
+      stub_request(:get, "#{grafana_url}/api/org")
+        .to_return(status: 401, body: '{"message": "Unauthorized"}')
+      
+      expect { client.health_check! }.to raise_error(
+        Diffdash::Clients::Grafana::ConnectionError,
+        /authentication failed \(401\)/
+      )
+    end
+
     it "raises ConnectionError on HTTP error" do
-      stub_request(:get, "#{grafana_url}/api/health")
+      stub_request(:get, "#{grafana_url}/api/org")
         .to_return(status: 503, body: "Unavailable")
       
       expect { client.health_check! }.to raise_error(
@@ -99,7 +109,7 @@ RSpec.describe Diffdash::Clients::Grafana do
     end
 
     it "raises ConnectionError on network failure" do
-      stub_request(:get, "#{grafana_url}/api/health")
+      stub_request(:get, "#{grafana_url}/api/org")
         .to_raise(Faraday::ConnectionFailed.new("Connection refused"))
       
       expect { client.health_check! }.to raise_error(

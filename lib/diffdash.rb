@@ -35,7 +35,6 @@ require_relative "diffdash/engine/engine"
 # Outputs (vendor-specific adapters)
 require_relative "diffdash/outputs/base"
 require_relative "diffdash/outputs/grafana"
-require_relative "diffdash/outputs/kibana"
 require_relative "diffdash/outputs/json"
 
 # CLI

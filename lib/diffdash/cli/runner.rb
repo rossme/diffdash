@@ -129,10 +129,8 @@ module Diffdash
             )
           when :json
             Outputs::Json.new
-          when :kibana
-            Outputs::Kibana.new
           else
-            raise ArgumentError, "Unknown output '#{output}'. Valid outputs: grafana, json, kibana."
+            raise ArgumentError, "Unknown output '#{output}'. Valid outputs: grafana, json."
           end
         end
       end
@@ -168,7 +166,6 @@ module Diffdash
         case adapter
         when Outputs::Grafana then :grafana
         when Outputs::Json then :json
-        when Outputs::Kibana then :kibana
         else
           class_name = adapter.class.name
           return :adapter if class_name.nil? || class_name.empty?
