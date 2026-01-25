@@ -6,7 +6,7 @@ RSpec.describe Diffdash::Engine::SignalBundle do
       type: :logs,
       name: "user_logged_in",
       filters: { service: "auth" },
-      time_range: { from: "now-1h", to: "now" }
+      time_range: { from: "now-30m", to: "now" }
     )
   end
 

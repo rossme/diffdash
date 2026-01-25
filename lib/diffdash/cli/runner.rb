@@ -88,9 +88,9 @@ module Diffdash
         dashboard_url = grafana_result&.dig(:url)
         print_signal_summary(bundle, url: dashboard_url, grafana_failed: grafana_failed)
 
-        # Post PR comment with dashboard link
+        # Post PR comment with dashboard link and signal summary
         if dashboard_url && @config.pr_comment?
-          post_pr_comment(dashboard_url)
+          post_pr_comment(dashboard_url, bundle)
         end
 
         warn_limit_warnings if @limit_warnings.any?
@@ -305,9 +305,9 @@ module Diffdash
         warn "[diffdash] #{message}" if @verbose
       end
 
-      def post_pr_comment(dashboard_url)
-        commenter = Services::PrCommenter.new(verbose: @verbose)
-        if commenter.post(dashboard_url: dashboard_url)
+      def post_pr_comment(dashboard_url, signal_bundle)
+        commenter = Services::PrCommenter.new(verbose: @verbose, default_env: @config.default_env)
+        if commenter.post(dashboard_url: dashboard_url, signal_bundle: signal_bundle)
           log_verbose("Posted dashboard link to PR")
         end
       end

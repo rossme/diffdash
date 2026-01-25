@@ -5,7 +5,8 @@ module Diffdash
     # Vendor-agnostic core engine.
     # Produces structured signal intent from diff context.
     class Engine
-      DEFAULT_TIME_RANGE = { from: "now-1h", to: "now" }.freeze
+      # Default to last 30 minutes - optimized for smoke testing freshly deployed code
+      DEFAULT_TIME_RANGE = { from: "now-30m", to: "now" }.freeze
 
       attr_reader :dynamic_metrics, :limit_warnings
 

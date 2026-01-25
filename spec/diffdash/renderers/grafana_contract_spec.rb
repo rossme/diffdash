@@ -20,7 +20,7 @@ RSpec.describe "Grafana v1 dashboard contract" do
     signal = Diffdash::Engine::SignalQuery.new(
       type: :logs,
       name: "hello_from_grape_api",
-      time_range: { from: "now-1h", to: "now" },
+      time_range: { from: "now-30m", to: "now" },
       source_file: "/app/api/v1/base.rb",
       defining_class: "V1::Base",
       metadata: { level: "info", line: 42 }
@@ -30,7 +30,7 @@ RSpec.describe "Grafana v1 dashboard contract" do
       metrics: [],
       traces: [],
       metadata: {
-        time_range: { from: "now-1h", to: "now" },
+        time_range: { from: "now-30m", to: "now" },
         change_set: { branch_name: "contract-dashboard" }
       }
     )

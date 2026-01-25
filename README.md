@@ -120,6 +120,32 @@ In dry-run mode:
 [diffdash] Dashboard not created
 ```
 
+## Smoke Testing Features
+
+Diffdash is optimized for smoke testing newly deployed code:
+
+### PR Comment with Signal Summary
+
+When running in GitHub Actions, diffdash automatically posts a comment to your PR with:
+- Count of detected logs and metrics
+- Breakdown by source class
+- Direct link to the Grafana dashboard
+
+### Default Time Range
+
+Dashboards default to **last 30 minutes** - ideal for seeing data from recently deployed code. Adjust in Grafana if you need a different range.
+
+### Getting Started Panel
+
+Each dashboard includes a guidance panel explaining how to see your signals:
+1. Deploy the PR to staging
+2. Trigger the code path
+3. Wait ~30 seconds and refresh
+
+### Environment Default
+
+Set `DIFFDASH_DEFAULT_ENV=staging` to have dashboards pre-filtered to your staging environment - no manual switching needed.
+
 ## Observability Signals
 
 ### Logs

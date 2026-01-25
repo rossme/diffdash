@@ -15,12 +15,12 @@ RSpec.describe Diffdash::CLI::Runner do
         Diffdash::Engine::SignalQuery.new(
           type: :logs,
           name: "hello",
-          time_range: { from: "now-1h", to: "now" }
+          time_range: { from: "now-30m", to: "now" }
         )
       ],
       metrics: [],
       traces: [],
-      metadata: { change_set: change_set.to_h, time_range: { from: "now-1h", to: "now" } }
+      metadata: { change_set: change_set.to_h, time_range: { from: "now-30m", to: "now" } }
     )
   end
 

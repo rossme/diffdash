@@ -12,7 +12,7 @@
     "version": 0,
     "refresh": "30s",
     "time": {
-      "from": "now-1h",
+      "from": "now-30m",
       "to": "now"
     },
     "templating": {
@@ -75,12 +75,27 @@
     "panels": [
       {
         "id": 1,
+        "type": "text",
+        "title": "🚀 Getting Started",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 24,
+          "h": 3
+        },
+        "options": {
+          "mode": "markdown",
+          "content": "**Detected 1 log and 0 metrics** in your PR. No data yet? Here's how to see your signals:\n1. **Deploy** this PR to your staging environment\n2. **Trigger** the code path (hit the endpoint, enqueue the job, etc.)\n3. **Wait** ~30 seconds for data to appear, then refresh this dashboard"
+        }
+      },
+      {
+        "id": 2,
         "type": "logs",
         "title": "Log: hello_from_grape_api",
         "description": "Source: V1::Base (app/api/v1/base.rb)",
         "gridPos": {
           "x": 0,
-          "y": 0,
+          "y": 3,
           "w": 12,
           "h": 8
         },

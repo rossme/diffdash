@@ -49,7 +49,7 @@ module Diffdash
           version: 0,
           refresh: "30s",
           time: {
-            from: signal_bundle.metadata.dig(:time_range, :from) || "now-1h",
+            from: signal_bundle.metadata.dig(:time_range, :from) || "now-30m",
             to: signal_bundle.metadata.dig(:time_range, :to) || "now"
           },
           templating: build_templating,
@@ -153,6 +153,11 @@ module Diffdash
         panels = []
         panel_id = 1
         current_y = 0
+
+        # Add guidance panel at the top
+        panels << getting_started_panel(panel_id, signal_bundle)
+        panel_id += 1
+        current_y = 3 # Guidance panel is 3 units tall
 
         logs = signal_bundle.logs
         metrics = signal_bundle.metrics
@@ -331,6 +336,27 @@ module Diffdash
             content: "# No observability signals detected in this PR.\n\n" \
                      "This dashboard was auto-generated but found no logs, metrics, or events " \
                      "in the changed Ruby files."
+          }
+        }
+      end
+
+      def getting_started_panel(panel_id, signal_bundle)
+        log_count = signal_bundle.logs&.size || 0
+        metric_count = signal_bundle.metrics&.size || 0
+
+        {
+          id: panel_id,
+          type: "text",
+          title: "🚀 Getting Started",
+          gridPos: { x: 0, y: 0, w: 24, h: 3 },
+          options: {
+            mode: "markdown",
+            content: <<~MARKDOWN.strip
+              **Detected #{log_count} log#{log_count == 1 ? '' : 's'} and #{metric_count} metric#{metric_count == 1 ? '' : 's'}** in your PR. No data yet? Here's how to see your signals:
+              1. **Deploy** this PR to your staging environment
+              2. **Trigger** the code path (hit the endpoint, enqueue the job, etc.)
+              3. **Wait** ~30 seconds for data to appear, then refresh this dashboard
+            MARKDOWN
           }
         }
       end

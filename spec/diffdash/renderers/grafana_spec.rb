@@ -7,7 +7,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
       let(:bundle) do
         Diffdash::Engine::SignalBundle.new(
           metadata: {
-            time_range: { from: "now-1h", to: "now" },
+            time_range: { from: "now-30m", to: "now" },
             change_set: { branch_name: "feature/pr-123" }
           }
         )
@@ -47,7 +47,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         Diffdash::Engine::SignalQuery.new(
           type: :logs,
           name: "payment_processed",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/services/payment.rb",
           defining_class: "PaymentService",
           metadata: { level: "info", line: 42 }
@@ -60,17 +60,26 @@ RSpec.describe Diffdash::Outputs::Grafana do
           logs: [log_signal],
           metrics: [],
           traces: [],
-          metadata: { time_range: { from: "now-1h", to: "now" } }
+          metadata: { time_range: { from: "now-30m", to: "now" } }
         )
       end
 
       it "creates log panel" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
+        log_panels = panels.select { |p| p[:type] == "logs" }
 
-        expect(panels.size).to eq(1)
-        expect(panels.first[:type]).to eq("logs")
-        expect(panels.first[:title]).to include("payment_processed")
+        expect(log_panels.size).to eq(1)
+        expect(log_panels.first[:title]).to include("payment_processed")
+      end
+
+      it "includes getting started guidance panel" do
+        result = renderer.render(bundle)
+        panels = result[:dashboard][:panels]
+        text_panels = panels.select { |p| p[:type] == "text" }
+
+        expect(text_panels.size).to eq(1)
+        expect(text_panels.first[:title]).to eq("🚀 Getting Started")
       end
 
       it "includes folder ID" do
@@ -92,16 +101,16 @@ RSpec.describe Diffdash::Outputs::Grafana do
 
       it "includes Loki datasource in log panel" do
         result = renderer.render(bundle)
-        panel = result[:dashboard][:panels].first
+        log_panel = result[:dashboard][:panels].find { |p| p[:type] == "logs" }
 
-        expect(panel[:targets].first[:datasource][:type]).to eq("loki")
+        expect(log_panel[:targets].first[:datasource][:type]).to eq("loki")
       end
 
       it "uses exact literal matching for log messages" do
         log_signal = Diffdash::Engine::SignalQuery.new(
           type: :logs,
           name: "Hello from Grape API!",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/services/payment.rb",
           defining_class: "PaymentService",
           metadata: { level: "info", line: 42 }
@@ -110,12 +119,13 @@ RSpec.describe Diffdash::Outputs::Grafana do
           logs: [log_signal],
           metrics: [],
           traces: [],
-          metadata: { time_range: { from: "now-1h", to: "now" } }
+          metadata: { time_range: { from: "now-30m", to: "now" } }
         )
         renderer = described_class.new(title: "Test Dashboard", folder_id: 123)
 
         result = renderer.render(bundle)
-        expr = result[:dashboard][:panels].first[:targets].first[:expr]
+        log_panel = result[:dashboard][:panels].find { |p| p[:type] == "logs" }
+        expr = log_panel[:targets].first[:expr]
 
         expect(expr).to include("|= \"Hello from Grape API!\"")
       end
@@ -126,7 +136,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         Diffdash::Engine::SignalQuery.new(
           type: :metrics,
           name: "requests_total",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/controllers/api.rb",
           defining_class: "ApiController",
           metadata: { metric_type: :counter }
@@ -139,32 +149,32 @@ RSpec.describe Diffdash::Outputs::Grafana do
           logs: [],
           metrics: [counter_signal],
           traces: [],
-          metadata: { time_range: { from: "now-1h", to: "now" } }
+          metadata: { time_range: { from: "now-30m", to: "now" } }
         )
       end
 
       it "creates counter panel" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
+        counter_panels = panels.select { |p| p[:type] == "timeseries" }
 
-        expect(panels.size).to eq(1)
-        expect(panels.first[:type]).to eq("timeseries")
-        expect(panels.first[:title]).to include("Counter:")
-        expect(panels.first[:title]).to include("requests_total")
+        expect(counter_panels.size).to eq(1)
+        expect(counter_panels.first[:title]).to include("Counter:")
+        expect(counter_panels.first[:title]).to include("requests_total")
       end
 
       it "includes Prometheus datasource" do
         result = renderer.render(bundle)
-        panel = result[:dashboard][:panels].first
+        counter_panel = result[:dashboard][:panels].find { |p| p[:type] == "timeseries" }
 
-        expect(panel[:targets].first[:datasource][:type]).to eq("prometheus")
+        expect(counter_panel[:targets].first[:datasource][:type]).to eq("prometheus")
       end
 
       it "uses rate() for counter queries" do
         result = renderer.render(bundle)
-        panel = result[:dashboard][:panels].first
+        counter_panel = result[:dashboard][:panels].find { |p| p[:type] == "timeseries" }
 
-        expect(panel[:targets].first[:expr]).to include("rate(")
+        expect(counter_panel[:targets].first[:expr]).to include("rate(")
       end
     end
 
@@ -173,7 +183,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         Diffdash::Engine::SignalQuery.new(
           type: :metrics,
           name: "queue_size",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/workers/queue.rb",
           defining_class: "QueueWorker",
           metadata: { metric_type: :gauge }
@@ -186,24 +196,25 @@ RSpec.describe Diffdash::Outputs::Grafana do
           logs: [],
           metrics: [gauge_signal],
           traces: [],
-          metadata: { time_range: { from: "now-1h", to: "now" } }
+          metadata: { time_range: { from: "now-30m", to: "now" } }
         )
       end
 
       it "creates gauge panel" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
+        gauge_panels = panels.select { |p| p[:type] == "timeseries" }
 
-        expect(panels.size).to eq(1)
-        expect(panels.first[:title]).to include("Gauge:")
-        expect(panels.first[:title]).to include("queue_size")
+        expect(gauge_panels.size).to eq(1)
+        expect(gauge_panels.first[:title]).to include("Gauge:")
+        expect(gauge_panels.first[:title]).to include("queue_size")
       end
 
       it "does not use rate() for gauge queries" do
         result = renderer.render(bundle)
-        panel = result[:dashboard][:panels].first
+        gauge_panel = result[:dashboard][:panels].find { |p| p[:type] == "timeseries" }
 
-        expect(panel[:targets].first[:expr]).not_to include("rate(")
+        expect(gauge_panel[:targets].first[:expr]).not_to include("rate(")
       end
     end
 
@@ -212,7 +223,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         Diffdash::Engine::SignalQuery.new(
           type: :metrics,
           name: "request.duration",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/middleware/timing.rb",
           defining_class: "TimingMiddleware",
           metadata: { metric_type: :histogram }
@@ -225,25 +236,27 @@ RSpec.describe Diffdash::Outputs::Grafana do
           logs: [],
           metrics: [histogram_signal],
           traces: [],
-          metadata: { time_range: { from: "now-1h", to: "now" } }
+          metadata: { time_range: { from: "now-30m", to: "now" } }
         )
       end
 
       it "creates three panels for histogram (p50, p95, p99)" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
+        histogram_panels = panels.select { |p| p[:type] == "timeseries" }
 
-        expect(panels.size).to eq(3)
-        expect(panels[0][:title]).to include("p50")
-        expect(panels[1][:title]).to include("p95")
-        expect(panels[2][:title]).to include("p99")
+        expect(histogram_panels.size).to eq(3)
+        expect(histogram_panels[0][:title]).to include("p50")
+        expect(histogram_panels[1][:title]).to include("p95")
+        expect(histogram_panels[2][:title]).to include("p99")
       end
 
       it "uses histogram_quantile in queries" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
+        histogram_panels = panels.select { |p| p[:type] == "timeseries" }
 
-        panels.each do |panel|
+        histogram_panels.each do |panel|
           expect(panel[:targets].first[:expr]).to include("histogram_quantile")
         end
       end
@@ -254,7 +267,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         Diffdash::Engine::SignalQuery.new(
           type: :logs,
           name: "event",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/test.rb",
           defining_class: "Test"
         )
@@ -264,7 +277,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         Diffdash::Engine::SignalQuery.new(
           type: :metrics,
           name: "counter",
-          time_range: { from: "now-1h", to: "now" },
+          time_range: { from: "now-30m", to: "now" },
           source_file: "/app/test.rb",
           defining_class: "Test",
           metadata: { metric_type: :counter }
@@ -277,27 +290,28 @@ RSpec.describe Diffdash::Outputs::Grafana do
           logs: [log_signal],
           metrics: [counter_signal],
           traces: [],
-          metadata: { time_range: { from: "now-1h", to: "now" } }
+          metadata: { time_range: { from: "now-30m", to: "now" } }
         )
       end
 
       it "creates panels for both signal types" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
+        log_panels = panels.select { |p| p[:type] == "logs" }
+        metric_panels = panels.select { |p| p[:type] == "timeseries" }
 
-        expect(panels.size).to eq(2)
-        expect(panels[0][:type]).to eq("logs")
-        expect(panels[1][:type]).to eq("timeseries")
+        expect(log_panels.size).to eq(1)
+        expect(metric_panels.size).to eq(1)
       end
 
       it "positions log panels before metric panels" do
         result = renderer.render(bundle)
         panels = result[:dashboard][:panels]
 
-        log_panel_y = panels[0][:gridPos][:y]
-        metric_panel_y = panels[1][:gridPos][:y]
+        log_panel = panels.find { |p| p[:type] == "logs" }
+        metric_panel = panels.find { |p| p[:type] == "timeseries" }
 
-        expect(log_panel_y).to be < metric_panel_y
+        expect(log_panel[:gridPos][:y]).to be < metric_panel[:gridPos][:y]
       end
     end
 
@@ -306,7 +320,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
       let(:bundle) do
         Diffdash::Engine::SignalBundle.new(
           metadata: {
-            time_range: { from: "now-1h", to: "now" },
+            time_range: { from: "now-30m", to: "now" },
             change_set: { branch_name: "feature/pr-123" }
           }
         )
@@ -369,7 +383,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
       let(:bundle) do
         Diffdash::Engine::SignalBundle.new(
           metadata: {
-            time_range: { from: "now-1h", to: "now" },
+            time_range: { from: "now-30m", to: "now" },
             change_set: { branch_name: "feature/test" }
           }
         )
