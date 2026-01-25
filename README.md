@@ -483,15 +483,24 @@ bundle exec diffdash
 
 ## Log Matching Notes
 
-Diffdash builds Loki queries from log messages. For **plain string or symbol**
-messages, it uses the exact literal in the query:
+Diffdash builds Loki queries from log messages. The matching strategy depends on
+the log message type:
 
-```text
-{env=~"$env", app=~"$app"} |= "Hello from Grape API!"
+**Plain strings or symbols** - Uses exact literal:
+```ruby
+logger.info("Hello from Grape API!")
+# Query: {env=~"$env", app=~"$app"} |= "Hello from Grape API!"
 ```
 
-For **interpolated or dynamic strings**, Diffdash falls back to a sanitized
-identifier to keep queries stable.
+**Interpolated strings** - Extracts static parts:
+```ruby
+logger.info("Loaded widget #{widget.id}")
+# Query: {env=~"$env", app=~"$app"} |= "Loaded widget "
+# Matches: "Loaded widget 123", "Loaded widget 456", etc.
+```
+
+This approach ensures queries match all instances of interpolated logs while
+maintaining exact matching for static messages.
 
 ## Grafana Schema Validation
 

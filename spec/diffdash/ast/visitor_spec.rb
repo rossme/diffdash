@@ -149,7 +149,7 @@ RSpec.describe Diffdash::AST::Visitor do
         expect(visitor.log_calls.first[:event_name]).to eq("Processing payment for user")
       end
 
-      it "derives event name from interpolated string" do
+      it "extracts static parts from interpolated string" do
         source = <<~'RUBY'
           class Foo
             def bar(user_id)
@@ -159,7 +159,7 @@ RSpec.describe Diffdash::AST::Visitor do
         RUBY
         parse_and_visit(source)
 
-        expect(visitor.log_calls.first[:event_name]).to eq("processed_user")
+        expect(visitor.log_calls.first[:event_name]).to eq("Processed user ")
       end
 
       it "records defining class" do

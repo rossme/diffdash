@@ -25,6 +25,7 @@ require_relative "diffdash/ast/visitor"
 require_relative "diffdash/ast/ancestor_resolver"
 require_relative "diffdash/detectors/ruby_detector"
 require_relative "diffdash/clients/grafana"
+require_relative "diffdash/clients/datadog"
 require_relative "diffdash/services/signal_collector"
 require_relative "diffdash/services/pr_commenter"
 require_relative "diffdash/formatters/dashboard_title"
@@ -42,6 +43,7 @@ require_relative "diffdash/engine/engine"
 # Outputs (vendor-specific adapters)
 require_relative "diffdash/outputs/base"
 require_relative "diffdash/outputs/grafana"
+require_relative "diffdash/outputs/datadog"
 require_relative "diffdash/outputs/json"
 
 # CLI
@@ -49,6 +51,5 @@ require_relative "diffdash/cli/runner"
 
 module Diffdash
   class Error < StandardError; end
-  class LimitExceededError < Error; end
   class GitContextError < Error; end
 end

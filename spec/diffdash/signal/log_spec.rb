@@ -18,23 +18,7 @@ RSpec.describe Diffdash::Signal::Log do
       expect(log_signal.source_file).to eq("/app/services/payment.rb")
       expect(log_signal.defining_class).to eq("PaymentProcessor")
       expect(log_signal.inheritance_depth).to eq(0)
-      expect(log_signal.labels).to eq({})
-      expect(log_signal.confidence).to eq(:high)
       expect(log_signal.metadata).to eq({ level: "info", line: 42 })
-    end
-
-    it "accepts custom labels and confidence" do
-      signal = described_class.new(
-        name: "test",
-        source_file: "/test.rb",
-        defining_class: "Test",
-        inheritance_depth: 0,
-        labels: { env: "prod" },
-        confidence: :medium
-      )
-
-      expect(signal.labels).to eq({ env: "prod" })
-      expect(signal.confidence).to eq(:medium)
     end
   end
 

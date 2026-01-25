@@ -11,8 +11,6 @@ module Diffdash
         source_file:,
         defining_class:,
         inheritance_depth:,
-        labels: {},
-        confidence: :high,
         metadata: {}
       )
         metadata_with_type = metadata.merge(metric_type: :counter)
@@ -23,8 +21,6 @@ module Diffdash
           source_file: source_file,
           defining_class: defining_class,
           inheritance_depth: inheritance_depth,
-          labels: labels,
-          confidence: confidence,
           metadata: metadata_with_type
         )
       end

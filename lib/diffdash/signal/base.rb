@@ -4,7 +4,7 @@ module Diffdash
   module Signal
     # Base class for all observability signals
     class Base
-      attr_reader :name, :type, :source_file, :labels, :confidence, :metadata,
+      attr_reader :name, :type, :source_file, :metadata,
                   :defining_class, :inheritance_depth
 
       def initialize(
@@ -13,8 +13,6 @@ module Diffdash
         source_file:,
         defining_class:,
         inheritance_depth:,
-        labels: {},
-        confidence: :high,
         metadata: {}
       )
         @name = name
@@ -22,8 +20,6 @@ module Diffdash
         @source_file = source_file
         @defining_class = defining_class
         @inheritance_depth = inheritance_depth
-        @labels = labels
-        @confidence = confidence
         @metadata = metadata
       end
 
@@ -39,7 +35,6 @@ module Diffdash
         false
       end
 
-      # Maintain compatibility with existing code expecting hash representation
       def to_h
         {
           type: type,
@@ -47,8 +42,6 @@ module Diffdash
           source_file: source_file,
           defining_class: defining_class,
           inheritance_depth: inheritance_depth,
-          labels: labels,
-          confidence: confidence,
           metadata: metadata
         }
       end

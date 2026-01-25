@@ -11,8 +11,6 @@ module Diffdash
         source_file:,
         defining_class:,
         inheritance_depth:,
-        labels: {},
-        confidence: :high,
         metadata: {}
       )
         super(
@@ -21,8 +19,6 @@ module Diffdash
           source_file: source_file,
           defining_class: defining_class,
           inheritance_depth: inheritance_depth,
-          labels: labels,
-          confidence: confidence,
           metadata: metadata
         )
       end

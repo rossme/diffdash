@@ -308,27 +308,18 @@ module Diffdash
           # Symbol - use directly
           first_arg.children.first.to_s
         when :dstr
-          # Interpolated string - use a stable derived identifier
+          # Interpolated string - extract static parts for matching
+          # e.g., "Loaded widget #{id}" -> "Loaded widget "
           static_parts = first_arg.children.select { |c| c.type == :str }
           message = static_parts.map { |s| s.children.first }.join
-          derive_event_name(message)
+          # Return the static parts as-is for Grafana matching
+          # This allows queries like |= "Loaded widget " to match all instances
+          message.empty? ? nil : message
         else
           nil
         end
       end
 
-      def derive_event_name(message)
-        return nil if message.nil? || message.empty?
-
-        # Create stable identifier from message
-        sanitized = message
-          .downcase
-          .gsub(/[^a-z0-9]+/, "_")
-          .gsub(/^_|_$/, "")
-          .slice(0, 50)
-
-        sanitized.empty? ? nil : sanitized
-      end
 
       def extract_metric_info(receiver, method_name, args)
         # Handle chained calls: Prometheus.counter(:name).increment
