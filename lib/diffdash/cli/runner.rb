@@ -4,7 +4,7 @@ module Diffdash
   module CLI
     # Thin CLI glue. Orchestrates engine + output adapters.
     class Runner
-      VALID_OPTIONS = %w[--dry-run --verbose -v --help -h --version --config].freeze
+      VALID_OPTIONS = %w[--dry-run --verbose -v --help -h --version --config --list-signals].freeze
       VALID_SUBCOMMANDS = %w[folders rspec].freeze
 
       def self.run(args)
@@ -19,6 +19,7 @@ module Diffdash
         @help = args.include?('--help') || args.include?('-h')
         @version = args.include?('--version')
         @verbose = args.include?('--verbose') || args.include?('-v')
+        @list_signals = args.include?('--list-signals')
         @subcommand = extract_subcommand(args)
         @dynamic_metrics = []
       end
@@ -72,6 +73,12 @@ module Diffdash
         @dynamic_metrics = bundle.metadata[:dynamic_metrics] || []
         @limit_warnings = bundle.metadata[:limit_warnings] || []
         log_verbose("Total signals extracted: #{bundle.logs.size + bundle.metrics.size}")
+
+        # Handle --list-signals flag
+        if @list_signals
+          print_signals_list(bundle)
+          return 0
+        end
 
         if bundle.empty?
           warn '[diffdash] No observability signals found in changed files'
@@ -345,6 +352,50 @@ module Diffdash
         warn "[diffdash] #{message}" if @verbose
       end
 
+      def print_signals_list(bundle)
+        logs = bundle.logs || []
+        metrics = bundle.metrics || []
+
+        puts "\n📊 Detected Signals\n\n"
+
+        if logs.any?
+          puts "Logs (#{logs.size}):"
+          logs_by_class = logs.group_by(&:defining_class)
+          logs_by_class.each do |klass, class_logs|
+            puts "  #{klass}:"
+            class_logs.each do |log|
+              level = log.metadata[:level] || "info"
+              puts "    • \"#{log.name}\" (#{level})"
+            end
+          end
+          puts ""
+        end
+
+        if metrics.any?
+          puts "Metrics (#{metrics.size}):"
+          metrics_by_type = metrics.group_by { |m| m.metadata[:metric_type] || :counter }
+          metrics_by_type.each do |type, type_metrics|
+            puts "  #{type.to_s.capitalize}s (#{type_metrics.size}):"
+            type_metrics.each do |metric|
+              puts "    • #{metric.name}"
+            end
+          end
+          puts ""
+        end
+
+        if @dynamic_metrics.any?
+          puts "⚠️  Dynamic Metrics (#{@dynamic_metrics.size}) - Cannot be added to dashboard:"
+          @dynamic_metrics.each do |m|
+            puts "  • #{m[:receiver]}.#{m[:type]} in #{m[:class]} (#{m[:file]}:#{m[:line]})"
+          end
+          puts ""
+        end
+
+        if logs.empty? && metrics.empty?
+          puts "No observability signals found in changed files.\n\n"
+        end
+      end
+
       def post_pr_comment(dashboard_url, signal_bundle)
         commenter = Services::PrCommenter.new(verbose: @verbose, default_env: @config.default_env)
         return unless commenter.post(dashboard_url: dashboard_url, signal_bundle: signal_bundle)
@@ -364,11 +415,12 @@ module Diffdash
             (none)       Run analysis and generate/upload dashboard
 
           Options:
-            --config FILE  Path to diffdash.yml configuration file
-            --dry-run      Generate JSON only, skip Grafana connection
-            --verbose      Print detailed progress information
-            --version      Show version number
-            --help         Show this help message
+            --config FILE    Path to diffdash.yml configuration file
+            --dry-run        Generate JSON only, skip Grafana connection
+            --list-signals   Show detected signals without generating dashboard
+            --verbose        Print detailed progress information
+            --version        Show version number
+            --help           Show this help message
 
           Configuration File (diffdash.yml):
             You can create a diffdash.yml file in your repository root to share

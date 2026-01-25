@@ -130,6 +130,38 @@ RSpec.describe Diffdash::CLI::Runner do
       end
     end
 
+    context "with --list-signals flag" do
+      let(:test_file) { create_temp_ruby_file }
+
+      before do
+        allow(git_context).to receive(:changed_files).and_return([test_file])
+      end
+
+      after do
+        File.delete(test_file) if File.exist?(test_file)
+      end
+
+      it "lists detected signals without generating dashboard" do
+        output = capture_stdout { described_class.run(["--list-signals"]) }
+
+        expect(output).to include("Detected Signals")
+        expect(output).to include("Logs")
+        expect(output).to include("Processing")
+      end
+
+      it "does not output JSON" do
+        output = capture_stdout { described_class.run(["--list-signals"]) }
+
+        expect(output).not_to include("dashboard")
+        expect { JSON.parse(output) }.to raise_error(JSON::ParserError)
+      end
+
+      it "returns exit code 0" do
+        result = silence_stderr { described_class.run(["--list-signals"]) }
+        expect(result).to eq(0)
+      end
+    end
+
     context "with changed Ruby files" do
       let(:test_file) { create_temp_ruby_file }
 

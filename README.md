@@ -98,9 +98,29 @@ diffdash [command] [options]
 **Options:**
 - `--config FILE` - Path to configuration file (default: `diffdash.yml` in repo root)
 - `--dry-run` - Generate JSON only, don't upload to Grafana
+- `--list-signals` - Show detected signals without generating dashboard (great for debugging)
 - `--verbose` - Show detailed progress, config source, and dynamic metric warnings
 - `--version` - Show version number
 - `--help` - Show help
+
+### Examples
+
+```bash
+# Generate and upload dashboard
+diffdash
+
+# See what signals would be detected (no upload)
+diffdash --list-signals
+
+# Generate JSON without uploading
+diffdash --dry-run
+
+# Use custom config file
+diffdash --config path/to/config.yml
+
+# Verbose output with detailed progress
+diffdash --verbose
+```
 
 ## Configuration File
 
@@ -180,6 +200,8 @@ Environment variables can be set in a `.env` file or exported directly. They **a
 
 ## Output
 
+### Normal Mode (Upload to Grafana)
+
 When signals are found, JSON is output first, then a summary:
 
 ```
@@ -191,7 +213,7 @@ When signals are found, JSON is output first, then a summary:
 [diffdash] Note: 1 dynamic metric could not be added
 ```
 
-In dry-run mode:
+### Dry-Run Mode
 
 ```
 [diffdash] vX.X.X
@@ -201,7 +223,40 @@ In dry-run mode:
 [diffdash] Mode: dry-run (not uploaded)
 ```
 
-**If no signals are found, no dashboard is created:**
+### List Signals Mode
+
+Quick overview without generating a dashboard:
+
+```
+[diffdash] vX.X.X
+[diffdash] Branch: feature-payments
+[diffdash] Changed files: 3
+[diffdash] Filtered Ruby files: 2
+
+📊 Detected Signals
+
+Logs (5):
+  PaymentProcessor:
+    • "payment_started" (info)
+    • "payment_completed" (info)
+    • "payment_failed" (error)
+  UsersController:
+    • "user_created" (info)
+    • "user_updated" (info)
+
+Metrics (4):
+  Counters (3):
+    • payments.processed
+    • payments.success
+    • payments.failed
+  Gauges (1):
+    • queue.size
+
+⚠️  Dynamic Metrics (1) - Cannot be added to dashboard:
+  • StatsD.increment in PaymentProcessor (app/services/payment.rb:42)
+```
+
+### No Signals Found
 
 ```
 [diffdash] vX.X.X
