@@ -5,12 +5,15 @@ module Diffdash
     # Grafana output adapter.
     # Translates SignalQuery intent into Grafana dashboard JSON.
     class Grafana < Base
-      def initialize(title:, folder_id:, dry_run: false, verbose: false, default_env: "production")
+      def initialize(title:, folder_id:, dry_run: false, verbose: false, default_env: "production",
+                     app_name: nil, pr_deploy_annotation_expr: nil)
         @title = title
         @folder_id = folder_id
         @dry_run = dry_run
         @verbose = verbose
         @default_env = default_env
+        @app_name = app_name
+        @pr_deploy_annotation_expr = pr_deploy_annotation_expr
       end
 
       # Render SignalBundle into Grafana dashboard payload
@@ -123,8 +126,8 @@ module Diffdash
       end
 
       def infer_app_name
-        # Priority: ENV var > Git repo name > wildcard
-        return ENV["DIFFDASH_APP_NAME"] if ENV["DIFFDASH_APP_NAME"]
+        # Priority: Configured app_name > Git repo name > wildcard
+        return @app_name if @app_name && !@app_name.empty?
 
         # Try to get repo name from git remote
         begin
@@ -420,7 +423,7 @@ module Diffdash
       end
 
       def pr_deployment_expr(signal_bundle)
-        override = ENV["DIFFDASH_PR_DEPLOY_ANNOTATION_EXPR"].to_s.strip
+        override = @pr_deploy_annotation_expr.to_s.strip
         return override unless override.empty?
 
         branch = signal_bundle.metadata.dig(:change_set, :branch_name).to_s.strip

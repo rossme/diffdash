@@ -1,0 +1,65 @@
+# Example diffdash configuration file
+# Copy this to diffdash.yml and customize for your project
+#
+# Configuration is loaded from the following sources in order of precedence:
+# 1. Environment variables (highest priority)
+# 2. Path specified via --config flag
+# 3. diffdash.yml in current directory
+# 4. diffdash.yml in git repository root
+# 5. Default values (lowest priority)
+#
+# NOTE: API tokens should ONLY be set via environment variables for security.
+
+# Grafana configuration
+grafana:
+  # Grafana instance URL (also accepts DIFFDASH_GRAFANA_URL env var)
+  url: https://grafana.mycompany.com
+  
+  # Grafana folder ID to store dashboards (also accepts DIFFDASH_GRAFANA_FOLDER_ID)
+  # Use `diffdash folders` to list available folders
+  folder_id: 42
+
+# Output adapters to use (also accepts DIFFDASH_OUTPUTS env var as comma-separated list)
+# Available: grafana, json
+outputs:
+  - grafana
+  - json
+
+# Default environment filter for Loki/Prometheus queries
+# (also accepts DIFFDASH_DEFAULT_ENV env var)
+default_env: production
+
+# Whether to post dashboard link as a comment on the PR
+# (also accepts DIFFDASH_PR_COMMENT env var)
+pr_comment: true
+
+# Application name for dashboard queries (also accepts DIFFDASH_APP_NAME env var)
+# If not set, will be inferred from git remote URL
+app_name: my-service
+
+# Custom PromQL expression for PR deployment annotations
+# (also accepts DIFFDASH_PR_DEPLOY_ANNOTATION_EXPR env var)
+# pr_deploy_annotation_expr: changes(deploy_timestamp{branch="$branch"}[5m]) > 0
+
+# File filtering configuration
+# Paths to ignore when scanning for observability signals
+ignore_paths:
+  - vendor/
+  - lib/legacy/
+  - tmp/
+
+# Only scan files within these paths (empty = scan all paths)
+# include_paths:
+#   - app/
+#   - lib/
+
+# File suffixes to exclude (defaults to test files)
+excluded_suffixes:
+  - _spec.rb
+  - _test.rb
+
+# Directories to exclude (defaults to test and config directories)
+excluded_directories:
+  - spec
+  - test
+  - config
