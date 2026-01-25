@@ -21,14 +21,24 @@
           "name": "datasource",
           "type": "datasource",
           "query": "prometheus",
-          "current": {},
+          "current": {
+            "text": "default",
+            "value": "default"
+          },
+          "options": [],
+          "refresh": 1,
           "hide": 0
         },
         {
           "name": "datasource_loki",
           "type": "datasource",
           "query": "loki",
-          "current": {},
+          "current": {
+            "text": "default",
+            "value": "default"
+          },
+          "options": [],
+          "refresh": 1,
           "hide": 0
         },
         {
@@ -51,9 +61,12 @@
           },
           "query": "label_values({app!=\"\"}, app)",
           "refresh": 1,
-          "includeAll": false,
+          "includeAll": true,
           "multi": false,
-          "current": {},
+          "current": {
+            "text": "diffdash",
+            "value": "diffdash"
+          },
           "options": [],
           "sort": 1
         }
