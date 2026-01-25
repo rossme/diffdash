@@ -13,10 +13,14 @@ module Diffdash
         @filtered_files = filtered_files
       end
 
-      def self.from_git
+      # Create a ChangeSet from git context.
+      #
+      # @param config [Config, nil] optional config for file filtering rules
+      def self.from_git(config: nil)
         git_context = GitContext.new
         changed_files = git_context.changed_files
-        filtered_files = FileFilter.filter(changed_files)
+        file_filter = FileFilter.new(config: config)
+        filtered_files = file_filter.filter(changed_files)
 
         new(
           branch_name: git_context.branch_name,

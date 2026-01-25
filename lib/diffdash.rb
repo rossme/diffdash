@@ -15,6 +15,7 @@ rescue LoadError
 end
 
 require_relative "diffdash/version"
+require_relative "diffdash/config_loader"
 require_relative "diffdash/config"
 require_relative "diffdash/git_context"
 require_relative "diffdash/file_filter"
