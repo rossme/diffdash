@@ -1,8 +1,9 @@
 # Diffdash
 
-**Observability focused on the code you're shipping, not the noise.**
-
+This is the future of developer-centric observability. Not bigger dashboards, but smarter, smaller, more relevant ones.
 PR-scoped observability signal extractor and Grafana dashboard generator.
+
+Observability focused on the code _**you**_ are shipping.
 
 ## Overview
 
@@ -410,7 +411,7 @@ end
 
 class PaymentProcessor < BaseProcessor
   include Loggable
-  
+
   def charge
     StatsD.increment("payment.charged")  # ✅ Detected
   end
