@@ -79,7 +79,12 @@ module Diffdash
           name: name,
           type: "datasource",
           query: query,
-          current: {},
+          current: {
+            text: "default",
+            value: "default"
+          },
+          options: [],
+          refresh: 1,
           hide: 0
         }
       end
