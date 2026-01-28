@@ -345,9 +345,12 @@ module Diffdash
 
       def getting_started_panel(panel_id, signal_bundle)
         pr_link = build_pr_link(signal_bundle)
+        pr_number = extract_pr_number
 
-        content = if pr_link
-                    "**Diffdash** — [View PR](#{pr_link})"
+        content = if pr_link && pr_number
+                    "**Diffdash** — :octocat: [PR##{pr_number}](#{pr_link})"
+                  elsif pr_link
+                    "**Diffdash** — :octocat: [View PR](#{pr_link})"
                   else
                     "**Diffdash**"
                   end
@@ -362,6 +365,11 @@ module Diffdash
             content: content
           }
         }
+      end
+
+      def extract_pr_number
+        ENV["GITHUB_PR_NUMBER"] || 
+        (ENV["GITHUB_REF"]&.match(/refs\/pull\/(\d+)\/merge/)&.[](1))
       end
 
       def build_pr_link(signal_bundle)

@@ -448,7 +448,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         result = renderer.render(bundle)
         getting_started = result[:dashboard][:panels].find { |p| p[:type] == "text" }
         
-        expect(getting_started[:options][:content]).to eq("**Diffdash** — [View PR](https://github.com/rossme/diffdash-test-app/pull/42)")
+        expect(getting_started[:options][:content]).to eq("**Diffdash** — :octocat: [PR#42](https://github.com/rossme/diffdash-test-app/pull/42)")
         
         ENV.delete("GITHUB_PR_NUMBER")
       end
@@ -467,7 +467,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         result = renderer.render(bundle)
         getting_started = result[:dashboard][:panels].find { |p| p[:type] == "text" }
         
-        expect(getting_started[:options][:content]).to eq("**Diffdash** — [View PR](https://github.com/rossme/diffdash-test-app/pull/123)")
+        expect(getting_started[:options][:content]).to eq("**Diffdash** — :octocat: [PR#123](https://github.com/rossme/diffdash-test-app/pull/123)")
         
         ENV.delete("GITHUB_REF")
       end
@@ -486,7 +486,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         result = renderer.render(bundle)
         getting_started = result[:dashboard][:panels].find { |p| p[:type] == "text" }
         
-        expect(getting_started[:options][:content]).to eq("**Diffdash** — [View PR](https://github.com/rossme/diffdash-test-app/pulls)")
+        expect(getting_started[:options][:content]).to eq("**Diffdash** — :octocat: [View PR](https://github.com/rossme/diffdash-test-app/pulls)")
         
         ENV.delete("CI")
       end
@@ -503,7 +503,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         result = renderer.render(bundle)
         getting_started = result[:dashboard][:panels].find { |p| p[:type] == "text" }
         
-        expect(getting_started[:options][:content]).to eq("**Diffdash** — [View PR](https://github.com/rossme/diffdash-test-app/tree/feature/test-branch)")
+        expect(getting_started[:options][:content]).to eq("**Diffdash** — :octocat: [View PR](https://github.com/rossme/diffdash-test-app/tree/feature/test-branch)")
       end
 
       it "handles HTTPS git URLs" do
@@ -523,7 +523,7 @@ RSpec.describe Diffdash::Outputs::Grafana do
         result = renderer.render(bundle)
         getting_started = result[:dashboard][:panels].find { |p| p[:type] == "text" }
         
-        expect(getting_started[:options][:content]).to eq("**Diffdash** — [View PR](https://github.com/rossme/diffdash-test-app/pull/99)")
+        expect(getting_started[:options][:content]).to eq("**Diffdash** — :octocat: [PR#99](https://github.com/rossme/diffdash-test-app/pull/99)")
         
         ENV.delete("GITHUB_PR_NUMBER")
       end
