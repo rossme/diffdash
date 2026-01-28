@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    diffdash (0.1.26)
+    diffdash (0.1.27)
       ast (~> 2.4)
       dotenv (>= 2.8)
       faraday (>= 2.0)
